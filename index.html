@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>window.ERP_GUARD_ALLOW=function(){return ['localhost','127.0.0.1'].includes(location.hostname);};</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://mycosmosshop.github.io/erp-portal/erp-guard.js"></script>
+<title>Palet Yerleşim Planlayıcı</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f3f0; --card:#ffffff; --ink:#2b2a28; --muted:#8a857d;
+    --line:#e4e1db; --accent:#1f6f8b; --accent2:#d0021b; --ok:#2e7d32; --warn:#c62828;
+    --wood:#e9cd92; --woodline:#8a6d3b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{padding:18px 28px 10px}
+  header h1{margin:0;font-size:21px}
+  header p{margin:4px 0 0;color:var(--muted)}
+  .wrap{display:grid;grid-template-columns:330px 1fr;gap:18px;padding:14px 28px 40px;align-items:start}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .card h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+  input[type=number],input[type=text],select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fcfbfa}
+  input:focus,select:focus{outline:2px solid #bcd9e4;border-color:var(--accent)}
+  .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:4px}
+  .seg button{flex:1;padding:7px 4px;border:none;background:#fcfbfa;cursor:pointer;font-size:13px;color:var(--muted)}
+  .seg button.on{background:var(--accent);color:#fff;font-weight:600}
+  .check{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink)}
+  .check input{width:auto}
+  .stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+  .stat{background:#f7f9fa;border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:110px}
+  .stat .v{font-size:19px;font-weight:700;color:var(--accent)}
+  .stat .v.big{color:var(--accent2)}
+  .stat .k{font-size:11px;color:var(--muted);margin-top:2px}
+  .views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:1200px){.views{grid-template-columns:1fr}}
+  .viewbox{border:1px solid var(--line);border-radius:10px;background:#fdfcfa;padding:8px}
+  .viewbox h3{margin:2px 0 6px;font-size:12.5px;color:var(--muted);font-weight:600;text-align:center}
+  .viewbox svg{width:100%;height:auto;display:block}
+  .viewbox{position:relative}
+  .isoctl{position:absolute;top:6px;right:8px;display:flex;gap:4px;z-index:5}
+  .isoctl button{width:27px;height:27px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;font-size:14px;line-height:1;color:#555}
+  .isoctl button:hover{border-color:var(--accent);color:var(--accent)}
+  .msg{border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13px}
+  .msg.warn{background:#fdecea;color:var(--warn);border:1px solid #f5c6c0}
+  .msg.info{background:#eef6f8;color:var(--accent);border:1px solid #cfe3ea}
+  .detail{font-size:13px;color:#555;line-height:1.7;margin-top:8px}
+  .detail b{color:var(--ink)}
+  .hidden{display:none!important}
+  .subtle{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  hr{border:none;border-top:1px dashed var(--line);margin:12px 0}
+  .man{background:#faf8f4;border:1px dashed #ddd4c2;border-radius:10px;padding:10px 12px;margin-top:8px}
+  .tabs{display:flex;gap:8px;padding:10px 28px 0}
+  .tabs button{padding:9px 20px;border:1px solid var(--line);border-radius:10px;background:#ece9e3;cursor:pointer;font-size:14px;color:var(--muted);font-weight:600}
+  .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn{width:100%;margin-top:12px;padding:11px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+  .btn:hover{background:#185a71}
+  .btn.small{width:auto;padding:8px 16px;margin-top:10px;font-size:13px}
+  .altrank{background:var(--accent2);color:#fff;border-radius:8px;padding:2px 12px;font-size:12.5px;font-weight:700}
+  .althead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .althead .t{font-size:15px;font-weight:700}
+  .optrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .opt{padding:7px 13px;border:1px solid var(--line);border-radius:8px;background:#fcfbfa;cursor:pointer;font-size:12.5px;color:var(--ink);text-align:left}
+  .opt:hover{border-color:var(--accent)}
+  .opt.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .opt .pct{opacity:0.75}
+  .exprow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:8px 10px;background:#f7f5f1;border:1px solid var(--line);border-radius:10px}
+  .exprow select{width:auto;padding:6px 8px}
+  .exprow .btn.small{margin-top:0}
+  .exprow label.inline{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);margin:0}
+  .btn.re{background:var(--accent2)}
+  .btn.re:hover{background:#a80217}
+</style>
+</head>
+<body>
+<header>
+  <h1>📦 Palet Yerleşim Planlayıcı</h1>
+  <p>Ölçüleri girin — koli içi ürün yerleşimi ve palet üstü koli yerleşimi otomatik hesaplanır. İsterseniz manuel yerleşim de tanımlayabilirsiniz.</p>
+</header>
+
+<div class="tabs">
+  <button id="tabBtnCalc" class="on">🧮 Hesaplayıcı</button>
+  <button id="tabBtnSug">💡 Koli &amp; Palet Önerisi</button>
+  <button id="tabBtnTruck">🚚 Araç Yükleme</button>
+</div>
+
+<div class="wrap" id="tabCalc">
+  <!-- ================= INPUTS ================= -->
+  <div>
+    <div class="card">
+      <h2><span class="dot"></span>Palet</h2>
+      <label>Palet tipi</label>
+      <select id="palletPreset">
+        <optgroup label="EUR / EPAL">
+          <option value="1200,800,144">EUR 1 / EPAL — 1200 × 800 × 144</option>
+          <option value="1200,1000,162">EUR 2 / EPAL 2 — 1200 × 1000 × 162</option>
+          <option value="1000,1200,144">EUR 3 / EPAL 3 — 1000 × 1200 × 144</option>
+          <option value="800,600,144">EUR 6 / EPAL 6 (yarım) — 800 × 600 × 144</option>
+          <option value="800,600,162">EPAL 7 (yarım, alçak) — 800 × 600 × 162</option>
+          <option value="600,400,140">Düsseldorf (çeyrek) — 600 × 400 × 140</option>
+        </optgroup>
+        <optgroup label="CP — Kimya paletleri">
+          <option value="1200,1000,138">CP1 — 1200 × 1000 × 138</option>
+          <option value="1200,800,141">CP2 — 1200 × 800 × 141</option>
+          <option value="1140,1140,138">CP3 — 1140 × 1140 × 138</option>
+          <option value="1300,1100,138">CP4 — 1300 × 1100 × 138</option>
+          <option value="1140,760,138">CP5 — 1140 × 760 × 138</option>
+          <option value="1200,1000,156">CP6 — 1200 × 1000 × 156</option>
+          <option value="1300,1100,156">CP7 — 1300 × 1100 × 156</option>
+          <option value="1140,1140,156,28,wing1">CP8 / CP9 (saçaklı, çuval) — 1140 × 1140 × 156</option>
+        </optgroup>
+        <optgroup label="CHEP (havuz paletleri)">
+          <option value="1200,800,144,25,chepeuro">CHEP Euro — 1200 × 800 × 144</option>
+          <option value="1200,1000,150,32,chepend">CHEP Endüstriyel — 1200 × 1000 × 150</option>
+          <option value="800,600,160,13,chephalf">CHEP Yarım (display) — 800 × 600 × 160</option>
+          <option value="600,400,140,7,chepq">CHEP Çeyrek (display) — 600 × 400 × 140</option>
+          <option value="1219,1016,147,27,chepus">CHEP Amerikan 48×40" — 1219 × 1016 × 147</option>
+        </optgroup>
+        <optgroup label="Kanatlı (saçaklı) paletler">
+          <option value="1250,1000,150,28,wing1">Tek kanatlı — 1250 × 1000 × 150 (üst tahtalar taşar)</option>
+          <option value="1250,1000,156,33,wing2">Çift kanatlı — 1250 × 1000 × 156 (vinç/sapan için)</option>
+        </optgroup>
+        <optgroup label="Diğer">
+          <option value="1200,1000,150">ISO / Endüstriyel — 1200 × 1000 × 150</option>
+          <option value="1140,1140,150">Konteyner — 1140 × 1140 × 150</option>
+          <option value="custom">Özel…</option>
+        </optgroup>
+      </select>
+      <div class="row">
+        <div><label>Uzun kenar (mm)</label><input type="number" id="pL" value="1200"></div>
+        <div><label>Kısa kenar (mm)</label><input type="number" id="pW" value="800"></div>
+        <div><label>Palet yük. (mm)</label><input type="number" id="pH" value="144"></div>
+      </div>
+      <div class="row2">
+        <div><label>Maks. toplam yükseklik (mm, palet dahil)</label><input type="number" id="maxH" value="2400"></div>
+        <div><label>Maks. sıra (boş = sınırsız)</label><input type="number" id="maxLayers" placeholder="—"></div>
+      </div>
+      <label>Palet ağırlığı (kg)</label><input type="number" id="pKg" value="25" step="0.5">
+      <div class="subtle">Palet tipi seçilince standart ağırlık otomatik gelir (EPAL 25 kg, ISO 30 kg, konteyner 32 kg) — değiştirebilirsiniz.</div>
+      <div class="check"><input type="checkbox" id="ovOn"><label style="margin:0;font-size:13px;color:var(--ink)">Dışa taşmaya izin ver (en/boy eşit)</label></div>
+      <div id="ovWrap" class="hidden">
+        <label>Maks. taşma (mm / kenar başına)</label><input type="number" id="ovMM" value="25" min="0">
+        <div class="subtle">Yerleşim ortalandığı için taşma her iki karşılıklı kenara eşit dağılır. İşaretli değilse taşma yapılmaz.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Koli (karton kutu)</h2>
+      <div class="row">
+        <div><label>Uzunluk (mm)</label><input type="number" id="bL" value="390"></div>
+        <div><label>Genişlik (mm)</label><input type="number" id="bW" value="150"></div>
+        <div><label>Yükseklik (mm)</label><input type="number" id="bH" value="235"></div>
+      </div>
+      <div class="check"><input type="checkbox" id="allowLay"><label style="margin:0;font-size:13px;color:var(--ink)">Koli yan yatabilir (↕ ok kısıtı yok)</label></div>
+      <label>Boş koli ağırlığı (kg, opsiyonel)</label><input type="number" id="bKg" placeholder="—" step="0.01">
+
+      <hr>
+      <label>Palet üstü yerleşim</label>
+      <div class="seg" id="segPallet">
+        <button data-v="auto" class="on">Otomatik (en uygun)</button>
+        <button data-v="manual">Ben söyleyeyim</button>
+      </div>
+      <div id="effWrap">
+        <label>Verim eşiği (%) — üstündeki tüm seçenekler listelenir</label>
+        <input type="number" id="effTh" value="85" min="0" max="100">
+      </div>
+      <div class="man hidden" id="manPallet">
+        <label>Dik duran ölçü (koli yüksekliği)</label>
+        <select id="mpVert"></select>
+        <label>Uzun kenara (palet uzunluğuna) gelen ölçü</label>
+        <select id="mpAlong"></select>
+        <div class="row">
+          <div><label>Uzun kenarda adet</label><input type="number" id="mpNL" min="0"></div>
+          <div><label>Kısa kenarda adet</label><input type="number" id="mpNW" min="0"></div>
+          <div><label>Sıra sayısı</label><input type="number" id="mpNZ" min="0"></div>
+        </div>
+        <div class="subtle">Boş bırakılan adetler sığan maksimuma göre doldurulur.</div>
+      </div>
+      <label>İstif düzeni (tuğla örgü)</label>
+      <select id="stackPattern">
+        <option value="kolon">Kolonlu — tüm sıralar üst üste</option>
+        <option value="rot180">Şaşırtmalı — çift sıralar 180° dönük</option>
+        <option value="alt">Şaşırtmalı — çift sıralar yön değişimli</option>
+      </select>
+      <div class="subtle" id="patternCompare"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Çemberleme &amp; Köşebent</h2>
+      <div class="row2">
+        <div><label>Kısa taraf çember adedi</label><input type="number" id="nStrapS" value="2" min="0"></div>
+        <div><label>Uzun taraf çember adedi</label><input type="number" id="nStrapL" value="2" min="0"></div>
+      </div>
+      <div class="subtle">Kısa taraf çemberi kısa kenarı sarar: 2 × (kısa kenar + toplam yükseklik). Uzun taraf çemberi uzun kenarı sarar. Her çembere 0,4 m kilit payı eklenir.</div>
+      <div class="check"><input type="checkbox" id="cbCorner" checked><label style="margin:0;font-size:13px;color:var(--ink)">Köşebent kullanılacak</label></div>
+      <div class="row2">
+        <div><label>Köşebent adedi</label><input type="number" id="cornerN" value="4" min="0"></div>
+        <div><label>Köşebent boyu (mm, boş = yük yük.)</label><input type="number" id="cornerLen" placeholder="oto"></div>
+      </div>
+      <div class="check"><input type="checkbox" id="cbStrapEdge"><label style="margin:0;font-size:13px;color:var(--ink)">Çember altına küçük köşebent</label></div>
+      <div class="row2">
+        <div><label>Çember başına adet</label><input type="number" id="strapEdgeN" value="2" min="0"></div>
+        <div></div>
+      </div>
+      <hr>
+      <div class="check" style="margin-top:0"><input type="checkbox" id="stOn" checked><label style="margin:0;font-size:13px;color:var(--ink)">Streç film kullanılacak</label></div>
+      <div class="row2">
+        <div><label>Sarım kat sayısı</label><input type="number" id="stKat" value="2" min="1"></div>
+        <div><label>Film genişliği (mm)</label><input type="number" id="stW" value="500" min="100"></div>
+      </div>
+      <div class="subtle">Streç m² = yük çevresi × sarım yüksekliği (palet dahil) × kat sayısı. Film boyu buradan yaklaşık hesaplanır.</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Ürün (koli içi)</h2>
+      <div class="check" style="margin-top:0"><input type="checkbox" id="prodOn"><label style="margin:0;font-size:13px;color:var(--ink)">Ürün yerleşimini de hesapla</label></div>
+      <div id="prodInputs" class="hidden">
+        <div class="row">
+          <div><label>Uzunluk (mm)</label><input type="number" id="uL" value="120"></div>
+          <div><label>Genişlik (mm)</label><input type="number" id="uW" value="70"></div>
+          <div><label>Yükseklik (mm)</label><input type="number" id="uH" value="220"></div>
+        </div>
+        <div class="check"><input type="checkbox" id="uAllowLay" checked><label style="margin:0;font-size:13px;color:var(--ink)">Ürün yan yatabilir</label></div>
+        <label>Ürün birimi</label>
+        <div class="seg" id="segUnit">
+          <button data-v="adet" class="on">Adet (tekli ürün)</button>
+          <button data-v="opp">Paket (OPP)</button>
+        </div>
+        <div id="oppRow" class="hidden">
+          <label>OPP içi ürün adedi</label><input type="number" id="oppQty" value="6" min="1">
+          <div class="subtle">OPP seçiliyse yukarıdaki ölçüler OPP paketinin ölçüleridir.</div>
+        </div>
+        <label>Birim ağırlık (kg — adet/OPP başına, opsiyonel)</label><input type="number" id="uKg" placeholder="—" step="0.01">
+        <div class="row">
+          <div><label>Koli iç uzunluk</label><input type="number" id="iL" placeholder="dış−?"></div>
+          <div><label>Koli iç genişlik</label><input type="number" id="iW" placeholder="dış−?"></div>
+          <div><label>Koli iç yükseklik</label><input type="number" id="iH" placeholder="dış−?"></div>
+        </div>
+        <div class="subtle">İç ölçüler boşsa koli dış ölçüleri kullanılır.</div>
+        <label>Koli içi yerleşim</label>
+        <div class="seg" id="segProd">
+          <button data-v="auto" class="on">Otomatik (en uygun)</button>
+          <button data-v="manual">Ben söyleyeyim</button>
+        </div>
+        <div class="man hidden" id="manProd">
+          <label>Dik duran ölçü (ürün yüksekliği)</label>
+          <select id="muVert"></select>
+          <label>Koli uzunluğuna gelen ölçü</label>
+          <select id="muAlong"></select>
+          <div class="row">
+            <div><label>Uzunlukta adet</label><input type="number" id="muNL" min="0"></div>
+            <div><label>Genişlikte adet</label><input type="number" id="muNW" min="0"></div>
+            <div><label>Kat sayısı</label><input type="number" id="muNZ" min="0"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RESULTS ================= -->
+  <div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--accent2)"></span>Palet Üstü Yerleşim (Koli → Palet)</h2>
+      <div class="exprow">
+        <select id="expMode">
+          <option value="both">Üstten görünüş + Perspektif</option>
+          <option value="iso">Sadece perspektif</option>
+        </select>
+        <label class="inline"><input type="checkbox" id="showDims" checked> Ebat ölçüleri çizimde görünsün</label>
+        <button class="btn small" id="btnPng">⬇ PNG indir</button>
+        <button class="btn small" id="btnPdf">⬇ PDF indir</button>
+        <button class="btn small re" id="btnRe">🔄 Yeniden yerleştir</button>
+      </div>
+      <div class="exprow">
+        <label class="inline">Başlık <input type="text" id="repTitle" value="SANİFOAM AMBALAJ TALİMATI" style="width:250px"></label>
+        <label class="inline">Doküman No <input type="text" id="repNo" value="PL133" style="width:90px"></label>
+        <label class="inline">Firma logosu <input type="file" id="logoFile" accept="image/*" style="width:210px"></label>
+      </div>
+      <div class="exprow">
+        <b style="font-size:13px">📄 Genel Rapor:</b>
+        <label class="inline"><input type="checkbox" id="rgProd" checked> Koli içi yerleşim</label>
+        <label class="inline"><input type="checkbox" id="rgPal" checked> Palet üstü yerleşim</label>
+        <label class="inline"><input type="checkbox" id="rgVeh" checked> Araç yükleme</label>
+        <button class="btn small" id="btnReport">⬇ Genel Rapor PDF</button>
+      </div>
+      <div class="stats" id="palletStats"></div>
+      <div id="autoOptions"></div>
+      <div id="palletMsgs"></div>
+      <div class="views">
+        <div class="viewbox"><h3 id="palletTopTitle">Üstten görünüş — 1 sıra</h3><div id="palletTop"></div></div>
+        <div class="viewbox"><h3>İzometrik görünüş — tam istif</h3><div id="palletIso"></div></div>
+      </div>
+      <div class="detail" id="palletDetail"></div>
+      <div class="detail" id="packDetail" style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px"></div>
+    </div>
+
+    <div class="card hidden" id="prodCard">
+      <h2><span class="dot" style="background:var(--accent2)"></span>Koli İçi Yerleşim (Ürün → Koli)</h2>
+      <div class="stats" id="prodStats"></div>
+      <div id="prodMsgs"></div>
+      <div class="views">
+        <div class="viewbox"><h3>Üstten görünüş — 1 kat</h3><div id="prodTop"></div></div>
+        <div class="viewbox"><h3>İzometrik görünüş — koli içi</h3><div id="prodIso"></div></div>
+      </div>
+      <div class="detail" id="prodDetail"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SUGGESTION TAB ================= -->
+<div class="wrap hidden" id="tabSuggest">
+  <div>
+    <div class="card">
+      <h2><span class="dot"></span>Ürün</h2>
+      <div class="row">
+        <div><label>Uzunluk (mm)</label><input type="number" id="sL" value="120"></div>
+        <div><label>Genişlik (mm)</label><input type="number" id="sW" value="70"></div>
+        <div><label>Yükseklik (mm)</label><input type="number" id="sH" value="220"></div>
+      </div>
+      <label>Ürün ağırlığı (kg, opsiyonel)</label><input type="number" id="sKg" placeholder="—" step="0.01">
+      <div class="check"><input type="checkbox" id="sAllowLay" checked><label style="margin:0;font-size:13px;color:var(--ink)">Ürün koli içinde yan yatabilir</label></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Koli kuralları</h2>
+      <div class="row2">
+        <div><label>Koli başına adet — min</label><input type="number" id="sMinN" value="6"></div>
+        <div><label>Koli başına adet — maks</label><input type="number" id="sMaxN" value="40"></div>
+      </div>
+      <div class="row2">
+        <div><label>Karton et kalınlığı (mm)</label><input type="number" id="sT" value="4"></div>
+        <div><label>Maks. koli kenarı (mm)</label><input type="number" id="sMaxDim" value="600"></div>
+      </div>
+      <label>Maks. koli ağırlığı (kg)</label><input type="number" id="sMaxKg" value="15" step="0.5">
+      <div class="check"><input type="checkbox" id="sBoxLay"><label style="margin:0;font-size:13px;color:var(--ink)">Koli palet üstünde yan yatabilir</label></div>
+      <div class="subtle">Koli dış ölçüsü = iç ölçü + 2 × et kalınlığı. Ağırlık limiti, ürün ağırlığı girildiyse uygulanır.</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Palet seçenekleri</h2>
+      <div id="spList" style="max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px 10px"></div>
+      <div class="subtle">İşaretlenen tüm palet tipleri alternatif hesabına dahil edilir.</div>
+      <label>Maks. toplam yükseklik (mm, palet dahil)</label><input type="number" id="sMaxH" value="2400">
+      <button class="btn" id="btnSuggest">💡 Alternatifleri Hesapla</button>
+    </div>
+  </div>
+  <div id="suggestResults">
+    <div class="card"><div class="msg info">Ürün ebadını girip <b>Alternatifleri Hesapla</b>'ya basın — en çok ürün/palet veren koli ebadı + palet + istif kombinasyonları alternatifler halinde listelenir.</div></div>
+  </div>
+</div>
+
+<!-- ================= TRUCK TAB ================= -->
+<div class="wrap hidden" id="tabTruck">
+  <div>
+    <div class="card">
+      <h2><span class="dot"></span>Araç / Konteyner</h2>
+      <label>Araç tipi</label>
+      <select id="vPreset">
+        <option value="13620,2480,2700,24000">Tır — Standart Dorse (13,6 m)</option>
+        <option value="13620,2480,3000,24000">Tır — Mega Dorse (13,6 m, 3 m yük.)</option>
+        <option value="10200,2480,2700,25000">Kırkayak (10,2 m kasa)</option>
+        <option value="8200,2480,2600,15000">Kamyon (8,2 m kasa)</option>
+        <option value="6200,2400,2400,8000">Küçük Kamyon (6,2 m kasa)</option>
+        <option value="5898,2352,2393,21700">20' Konteyner</option>
+        <option value="12032,2352,2393,26500">40' Konteyner</option>
+        <option value="12032,2352,2695,26500">40' HC Konteyner</option>
+        <option value="custom">Özel…</option>
+      </select>
+      <div class="row">
+        <div><label>İç uzunluk (mm)</label><input type="number" id="vL" value="13620"></div>
+        <div><label>İç genişlik (mm)</label><input type="number" id="vW" value="2480"></div>
+        <div><label>İç yükseklik (mm)</label><input type="number" id="vH" value="2700"></div>
+      </div>
+      <label>Yük kapasitesi (kg)</label><input type="number" id="vKg" value="24000">
+      <div class="check"><input type="checkbox" id="vStack"><label style="margin:0;font-size:13px;color:var(--ink)">Palet üstüne palet konabilir</label></div>
+      <div class="subtle">İzin verilirse ve yüklü palet yüksekliği araç iç yüksekliğine sığarsa 2. (ve sonraki) kat otomatik konur; sığmıyorsa konmaz.</div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Yük / Taşıyıcı Tipi</h2>
+      <select id="cType">
+        <option value="calc">Hesaplayıcıdaki palet planı</option>
+        <option value="1240,835,970,500,4,0,cage">Gitterbox / Kafes palet — 1240 × 835 × 970</option>
+        <option value="1200,1000,1000,400,3,0,boxwood">Box palet (kasa) — 1200 × 1000 × 1000</option>
+        <option value="1200,1000,1160,1130,2,1000,ibc">IBC Tank (1000 L bulk sıvı) — 1200 × 1000 × 1160</option>
+        <option value="585,585,880,200,2,216,drum">Çelik Varil 216,5 L (sıvı/toz) — Ø585 × 880</option>
+        <option value="600,600,935,230,2,220,drum">Plastik Varil 220 L (sıvı/toz) — Ø600 × 935</option>
+        <option value="custom">Özel taşıyıcı…</option>
+      </select>
+      <div id="cWrap" class="hidden">
+        <div class="row">
+          <div><label>Uzunluk/Çap (mm)</label><input type="number" id="cL"></div>
+          <div><label>Genişlik/Çap (mm)</label><input type="number" id="cW"></div>
+          <div><label>Yükseklik (mm)</label><input type="number" id="cH"></div>
+        </div>
+        <div class="row2">
+          <div><label>Dolu ağırlık (kg/adet)</label><input type="number" id="cKgU"></div>
+          <div><label>Maks. istif katı</label><input type="number" id="cMaxT" min="1"></div>
+        </div>
+        <div class="subtle" id="cNote"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Yük Bilgisi</h2>
+      <div class="detail" id="vPalletInfo">—</div>
+      <div class="subtle">Palet planı seçiliyse ölçü, yükseklik, koli sayısı ve brüt ağırlık Hesaplayıcı sekmesinden otomatik alınır.</div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--accent2)"></span>Araç Yükleme Planı</h2>
+      <div class="stats" id="vStats"></div>
+      <div id="vOptions"></div>
+      <div id="vMsgs"></div>
+      <div class="views">
+        <div class="viewbox"><h3>Üstten görünüş — araç tabanı</h3><div id="vTop"></div></div>
+        <div class="viewbox"><h3>İzometrik görünüş</h3><div id="vIso"></div></div>
+      </div>
+      <div class="detail" id="vDetail"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const num = (id, def=0) => { const v = parseFloat($(id).value); return isNaN(v) ? def : v; };
+const numOr = (id, fallback) => { const v = parseFloat($(id).value); return (isNaN(v)||v<=0) ? fallback : v; };
+
+let palletMode = "auto", prodMode = "auto", prodUnit = "adet";
+
+/* ---------- geometry helpers ---------- */
+// Two-block layout: i columns of (l×w) + remaining strip filled with rotated (w×l)
+function twoBlock(PL, PW, l, w){
+  if(l<=0||w<=0) return {count:0, rects:[]};
+  let best = {count:-1,i:0};
+  const maxI = Math.floor(PL/l);
+  for(let i=0;i<=maxI;i++){
+    const rowsA = Math.floor(PW/w);
+    const remL  = PL - i*l;
+    const colsB = Math.floor(remL/w);
+    const rowsB = Math.floor(PW/l);
+    const n = i*rowsA + colsB*rowsB;
+    if(n>best.count) best = {count:n,i,rowsA,colsB,rowsB};
+  }
+  // flush-packed (köşeli, boşluksuz): her iki blok da aynı köşeden başlar,
+  // sonra bütün yerleşim TEK parça olarak palete ortalanır
+  const rects=[];
+  const hasA=best.i>0&&best.rowsA>0, hasB=best.colsB>0&&best.rowsB>0;
+  if(hasA)for(let c=0;c<best.i;c++)for(let r=0;r<best.rowsA;r++)
+    rects.push({x:c*l,y:r*w,w:l,h:w});
+  if(hasB)for(let c=0;c<best.colsB;c++)for(let r=0;r<best.rowsB;r++)
+    rects.push({x:best.i*l+c*w,y:r*l,w:w,h:l});
+  const usedL=(hasA?best.i*l:0)+(hasB?best.colsB*w:0);
+  const usedW=Math.max(hasA?best.rowsA*w:0, hasB?best.rowsB*l:0);
+  const offX=Math.max(0,(PL-usedL)/2), offY=Math.max(0,(PW-usedW)/2);
+  rects.forEach(r=>{r.x+=offX;r.y+=offY;});
+  const mixed=hasA&&hasB;
+  const heightDiff=mixed?Math.abs(best.rowsA*w-best.rowsB*l):0;
+  return {count:best.count<0?0:best.count, rects, mixed, heightDiff};
+}
+
+function orientations(dims, allowLay){
+  // returns list of {fh (vertical), fp:[a,b] footprint}
+  const res=[]; const idx = allowLay ? [0,1,2] : [2];
+  const seen=new Set();
+  for(const vi of idx){
+    const fh=dims[vi]; const fp=dims.filter((_,i)=>i!==vi);
+    const key=fh+"|"+Math.min(...fp)+"|"+Math.max(...fp);
+    if(seen.has(key))continue; seen.add(key);
+    res.push({fh, fp, vi});
+  }
+  return res;
+}
+
+function autoLayout(PL,PW,availH,dims,allowLay,maxLayers){
+  let best=null;
+  for(const o of orientations(dims,allowLay)){
+    for(const [a,b] of [[o.fp[0],o.fp[1]],[o.fp[1],o.fp[0]]]){
+      const lay = twoBlock(PL,PW,a,b);
+      let nz = o.fh>0 ? Math.floor(availH/o.fh) : 0;
+      if(maxLayers>0) nz=Math.min(nz,maxLayers);
+      const total=lay.count*nz;
+      const cand={rects:lay.rects,perLayer:lay.count,nz,fh:o.fh,total,vi:o.vi,fl:a,fw:b,
+                  mixed:lay.mixed,heightDiff:lay.heightDiff};
+      // öncelik: toplam adet > karışıksız (tam grid, köşeli) > blok yükseklik farkı az > sıra başına adet
+      const betterThan = old =>
+        total>old.total ||
+        (total===old.total && (
+          (cand.mixed?1:0)<(old.mixed?1:0) ||
+          ((cand.mixed?1:0)===(old.mixed?1:0) && cand.heightDiff<old.heightDiff) ||
+          ((cand.mixed?1:0)===(old.mixed?1:0) && cand.heightDiff===old.heightDiff && cand.perLayer>old.perLayer)
+        ));
+      if(!best || betterThan(best)) best=cand;
+    }
+  }
+  return best || {rects:[],perLayer:0,nz:0,fh:dims[2],total:0,vi:2,fl:dims[0],fw:dims[1]};
+}
+
+// Aynı MAKSİMUM adedi veren tüm farklı iki-blok dizilişleri (verim düşmeden alternatif düzenler)
+function twoBlockVariants(PL,PW,l,w,cap){
+  if(l<=0||w<=0)return[];
+  const rowsA=Math.floor(PW/w), rowsB=Math.floor(PW/l);
+  const maxI=Math.floor(PL/l);
+  let maxC=-1; const combos=[];
+  for(let i=0;i<=maxI;i++){
+    const colsB=Math.floor((PL-i*l)/w);
+    const n=i*rowsA+colsB*rowsB;
+    combos.push({i,colsB,n});
+    if(n>maxC)maxC=n;
+  }
+  const outs=[];
+  for(const c of combos){
+    if(c.n!==maxC||maxC<=0)continue;
+    const rects=[];
+    const hasA=c.i>0&&rowsA>0, hasB=c.colsB>0&&rowsB>0;
+    if(hasA)for(let cc=0;cc<c.i;cc++)for(let r=0;r<rowsA;r++)rects.push({x:cc*l,y:r*w,w:l,h:w});
+    if(hasB)for(let cc=0;cc<c.colsB;cc++)for(let r=0;r<rowsB;r++)rects.push({x:c.i*l+cc*w,y:r*l,w:w,h:l});
+    const usedL=(hasA?c.i*l:0)+(hasB?c.colsB*w:0);
+    const usedW=Math.max(hasA?rowsA*w:0,hasB?rowsB*l:0);
+    const offX=Math.max(0,(PL-usedL)/2),offY=Math.max(0,(PW-usedW)/2);
+    rects.forEach(r=>{r.x+=offX;r.y+=offY;});
+    const mixed=hasA&&hasB;
+    outs.push({count:maxC,rects,mixed,heightDiff:mixed?Math.abs(rowsA*w-rowsB*l):0});
+    if(outs.length>=(cap||4))break;
+  }
+  return outs;
+}
+
+// Recursive guillotine packer (5-blok tarzı) — iki-bloktan fazlasını sığdırabilir
+function packAdvanced(L,W,a,b){
+  const memo=new Map(); let nodes=0;
+  const mn=Math.min(a,b);
+  const key=(x,y)=>x+"|"+y;
+  function grid(x,y){
+    const g1=Math.floor(x/a)*Math.floor(y/b), g2=Math.floor(x/b)*Math.floor(y/a);
+    return {count:Math.max(g1,g2),simple:true,ori:g1>=g2?[a,b]:[b,a]};
+  }
+  function solve(x,y){
+    x=Math.floor(x);y=Math.floor(y);
+    if(x<mn||y<mn)return {count:0,simple:true,ori:[a,b]};
+    const k=key(x,y); if(memo.has(k))return memo.get(k);
+    let best=grid(x,y);
+    if(nodes++<7000){
+      for(const [l,w] of [[a,b],[b,a]]){
+        const mi=Math.floor(x/l),mj=Math.floor(y/w);
+        for(let i=1;i<=mi;i++)for(let j=1;j<=mj;j++){
+          const base=i*j;
+          const c1=base+solve(x-i*l,y).count+solve(i*l,y-j*w).count;
+          if(c1>best.count)best={count:c1,l,w,i,j,split:1};
+          const c2=base+solve(x-i*l,j*w).count+solve(x,y-j*w).count;
+          if(c2>best.count)best={count:c2,l,w,i,j,split:2};
+        }
+      }
+    }
+    memo.set(k,best);return best;
+  }
+  function build(x,y,ox,oy,out){
+    x=Math.floor(x);y=Math.floor(y);
+    if(x<mn||y<mn)return;
+    const s=memo.get(key(x,y))||grid(x,y);
+    if(!s.count)return;
+    if(s.simple){
+      const [l,w]=s.ori,ni=Math.floor(x/l),nj=Math.floor(y/w);
+      for(let i2=0;i2<ni;i2++)for(let j2=0;j2<nj;j2++)out.push({x:ox+i2*l,y:oy+j2*w,w:l,h:w});
+      return;
+    }
+    const {l,w,i,j,split}=s;
+    for(let i2=0;i2<i;i2++)for(let j2=0;j2<j;j2++)out.push({x:ox+i2*l,y:oy+j2*w,w:l,h:w});
+    if(split===1){build(x-i*l,y,ox+i*l,oy,out);build(i*l,y-j*w,ox,oy+j*w,out);}
+    else{build(x-i*l,j*w,ox+i*l,oy,out);build(x,y-j*w,ox,oy+j*w,out);}
+  }
+  const root=solve(L,W),rects=[];build(L,W,0,0,rects);
+  return {count:root.count,rects};
+}
+
+// all viable auto layouts, deduped & ranked (for the clickable option list)
+function autoLayoutAll(PL,PW,availH,dims,allowLay,maxLayers){
+  const out=[];
+  for(const o of orientations(dims,allowLay)){
+    let nzO=o.fh>0?Math.floor(availH/o.fh):0;
+    if(maxLayers>0)nzO=Math.min(nzO,maxLayers);
+    for(const [a,b] of [[o.fp[0],o.fp[1]],[o.fp[1],o.fp[0]]]){
+      if(!nzO)continue;
+      for(const lay of twoBlockVariants(PL,PW,a,b,4)){
+        const areaEff=lay.rects.reduce((s,r)=>s+r.w*r.h,0)/(PL*PW)*100;
+        out.push({rects:lay.rects,perLayer:lay.count,nz:nzO,fh:o.fh,total:lay.count*nzO,
+                  vi:o.vi,fl:a,fw:b,mixed:lay.mixed,heightDiff:lay.heightDiff,areaEff});
+      }
+    }
+    // gelişmiş paketleyici — iki-bloktan fazla sığdırırsa listeye ekle
+    if(nzO>0){
+      const adv=packAdvanced(PL,PW,o.fp[0],o.fp[1]);
+      if(adv.rects.length){ // yerleşimi tek parça olarak ortala
+        const bx=Math.min(...adv.rects.map(r=>r.x)), by=Math.min(...adv.rects.map(r=>r.y));
+        const ex=Math.max(...adv.rects.map(r=>r.x+r.w)), ey=Math.max(...adv.rects.map(r=>r.y+r.h));
+        const ox=(PL-(ex-bx))/2-bx, oy=(PW-(ey-by))/2-by;
+        adv.rects.forEach(r=>{r.x+=ox;r.y+=oy;});
+      }
+      if(adv.count>0){
+        const areaEff=adv.rects.reduce((s,r)=>s+r.w*r.h,0)/(PL*PW)*100;
+        out.push({rects:adv.rects,perLayer:adv.count,nz:nzO,fh:o.fh,total:adv.count*nzO,
+                  vi:o.vi,fl:o.fp[0],fw:o.fp[1],mixed:true,heightDiff:1,areaEff,adv:true});
+      }
+    }
+  }
+  // tekilleştirme: ayna görüntüleri dahil aynı GÖRÜNEN düzenler tek sayılır,
+  // ama aynı adedi veren FARKLI dizilişler ayrı alternatif olarak kalır
+  const sig=c=>{
+    const vars=[
+      c.rects.map(r=>[r.x,r.y,r.w,r.h]),
+      c.rects.map(r=>[PL-r.x-r.w,r.y,r.w,r.h]),
+      c.rects.map(r=>[r.x,PW-r.y-r.h,r.w,r.h]),
+      c.rects.map(r=>[PL-r.x-r.w,PW-r.y-r.h,r.w,r.h]),
+    ];
+    return c.fh+"|"+c.nz+"|"+vars.map(v=>v.map(a=>a.map(Math.round).join(",")).sort().join(";")).sort()[0];
+  };
+  const seen=new Set(),ded=[];
+  for(const c of out){
+    const k=sig(c);
+    if(!seen.has(k)){seen.add(k);ded.push(c);}
+  }
+  ded.sort((x,y)=> y.total-x.total || (x.mixed?1:0)-(y.mixed?1:0) || x.heightDiff-y.heightDiff || y.perLayer-x.perLayer);
+  return ded;
+}
+let autoCands=[], autoSel=0;
+window.pickAuto=function(i){autoSel=i;compute();};
+
+function manualLayout(PL,PW,availH,dims,vi,alongIdxOfRest,nL,nW,nz,maxLayers){
+  const fp = dims.filter((_,i)=>i!==vi);
+  const fl = fp[alongIdxOfRest], fw = fp[1-alongIdxOfRest], fh = dims[vi];
+  const maxNL=Math.floor(PL/fl), maxNW=Math.floor(PW/fw);
+  let maxNZ = fh>0?Math.floor(availH/fh):0; if(maxLayers>0)maxNZ=Math.min(maxNZ,maxLayers);
+  nL = nL>0?nL:maxNL; nW = nW>0?nW:maxNW; nz = nz>0?nz:maxNZ;
+  const rects=[]; const offX=(PL-nL*fl)/2, offY=(PW-nW*fw)/2;
+  for(let c=0;c<nL;c++)for(let r=0;r<nW;r++)rects.push({x:offX+c*fl,y:offY+r*fw,w:fl,h:fw});
+  const overX = nL*fl>PL+0.001, overY = nW*fw>PW+0.001, overZ = nz*fh>availH+0.001;
+  return {rects,perLayer:nL*nW,nz,fh,total:nL*nW*nz,fl,fw,nL,nW,overX,overY,overZ,maxNL,maxNW,maxNZ};
+}
+
+/* ---------- SVG renderers ---------- */
+const NS="http://www.w3.org/2000/svg";
+function el(name,attrs,parent){const e=document.createElementNS(NS,name);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+function renderTop(container, PL, PW, rects, opt){
+  opt=opt||{};
+  const pad=46, w=560;
+  const s=(w-2*pad)/PL, h=PW*s+2*pad;
+  container.innerHTML="";
+  const svg=el("svg",{viewBox:`0 0 ${w} ${h.toFixed(0)}`},container);
+  el("rect",{x:pad,y:pad,width:PL*s,height:PW*s,fill:opt.contFill||"#e9cd92",stroke:opt.contStroke||"#8a6d3b","stroke-width":1.4},svg);
+  if(opt.ovh>0){
+    el("rect",{x:pad-opt.ovh*s,y:pad-opt.ovh*s,width:(PL+2*opt.ovh)*s,height:(PW+2*opt.ovh)*s,
+      fill:"none",stroke:"#c8862a","stroke-width":1,"stroke-dasharray":"6,4"},svg);
+  }
+  rects.forEach(r=>{
+    el("rect",{x:pad+r.x*s,y:pad+r.y*s,width:r.w*s,height:r.h*s,fill:opt.boxFill||"#f5f2ec",stroke:opt.boxStroke||"#a09a90","stroke-width":0.9},svg);
+    if(r.w*s>34&&r.h*s>13){
+      const t=el("text",{x:pad+(r.x+r.w/2)*s,y:pad+(r.y+r.h/2)*s+3,"text-anchor":"middle","font-size":9,fill:"#b0a89c"},svg);
+      t.textContent=`${Math.round(r.w)}×${Math.round(r.h)}`;
+    }
+  });
+  if(opt.ghost)opt.ghost.forEach(r=>{ // yüklenmeyen (ağırlık limiti) yerler
+    el("rect",{x:pad+r.x*s,y:pad+r.y*s,width:r.w*s,height:r.h*s,
+      fill:"#f6f4f0",stroke:"#b9b3aa","stroke-width":0.9,"stroke-dasharray":"5,4"},svg);
+  });
+  if(opt.overlay){
+    opt.overlay.forEach(r=>{
+      el("rect",{x:pad+r.x*s,y:pad+r.y*s,width:r.w*s,height:r.h*s,fill:"none",stroke:"#d0021b","stroke-width":1.4,"stroke-dasharray":"5,4"},svg);
+    });
+  }
+  // dims
+  if(opt.dims!==false){
+    const t1=el("text",{x:pad+PL*s/2,y:pad-8,"text-anchor":"middle","font-size":11,fill:"#666"},svg);
+    t1.textContent=`${PL} mm`;
+    const t2=el("text",{x:pad-8,y:pad+PW*s/2,"text-anchor":"middle","font-size":11,fill:"#666",transform:`rotate(-90 ${pad-8} ${pad+PW*s/2})`},svg);
+    t2.textContent=`${PW} mm`;
+    el("line",{x1:pad,y1:pad-18,x2:pad+PL*s,y2:pad-18,stroke:"#999","stroke-width":1},svg);
+    el("line",{x1:pad-18,y1:pad,x2:pad-18,y2:pad+PW*s,stroke:"#999","stroke-width":1},svg);
+  }
+}
+
+function isoProj(x,y,z,S){return [ (x-y)*0.8660*S, (x+y)*0.5*S - z*S ];}
+
+const ISO_VIEW={}, ISO_LAST={};
+function rotateScene(arr,k){
+  let out=arr.map(b=>({...b}));
+  for(let i=0;i<k;i++){
+    let mnx=1e9,mxx=-1e9;
+    out.forEach(b=>{mnx=Math.min(mnx,b.x);mxx=Math.max(mxx,b.x+b.dx);});
+    out=out.map(b=>({...b,x:b.y,y:mnx+mxx-b.x-b.dx,dx:b.dy,dy:b.dx}));
+  }
+  return out;
+}
+function applyZoom(svg,st){
+  const [x,y,w,h]=svg.dataset.base.split(" ").map(Number);
+  const w2=w/st.zoom,h2=h/st.zoom;
+  const cx=x+w/2+st.px, cy=y+h/2+st.py;
+  svg.setAttribute("viewBox",`${(cx-w2/2).toFixed(1)} ${(cy-h2/2).toFixed(1)} ${w2.toFixed(1)} ${h2.toFixed(1)}`);
+}
+// Ressam sıralaması (izdüşüm +x +y +z yönünden bakar): A kutusu bir eksende B'nin tamamen arkasındaysa
+// (A.x+dx ≤ B.x, A.y+dy ≤ B.y ya da A.z+dz ≤ B.z) A, B'yi hiçbir noktada örtemez → önce çizilir.
+// Önce yalnız z'ye göre sıralanıyordu: yerden (z=0) yükselen çember / streç bantları üst sıradaki kolilerin
+// altında kalıp görünmüyordu. Çözülemeyen (iç içe geçen) çiftler eski anahtar sırasıyla kalır.
+function derinlikSirala(bs){
+  const n=bs.length, E=0.5, arkada=(a,b)=> a.x+a.dx<=b.x+E || a.y+a.dy<=b.y+E || a.z+a.dz<=b.z+E;
+  const anahtar=[...bs.keys()].sort((i,j)=>(bs[i].z-bs[j].z)||((bs[i].x+bs[i].y)-(bs[j].x+bs[j].y)));
+  const sira=new Array(n); anahtar.forEach((i,k)=>sira[i]=k);
+  const sonra=bs.map(()=>[]), gir=new Array(n).fill(0);
+  // ekranda üst üste binmeyen çiftler sıralama gerektirmez (binlerce kolide de hızlı kalsın)
+  const kt=bs.map(b=>[(b.x-b.y-b.dy)*0.866,(b.x+b.dx-b.y)*0.866,(b.x+b.y)*0.5-b.z-b.dz,(b.x+b.dx+b.y+b.dy)*0.5-b.z]);
+  for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+    const A=kt[i], B=kt[j];
+    if(A[1]<=B[0]+E||B[1]<=A[0]+E||A[3]<=B[2]+E||B[3]<=A[2]+E) continue;
+    const ij=arkada(bs[i],bs[j]), ji=arkada(bs[j],bs[i]);
+    if(ij&&!ji){ sonra[i].push(j); gir[j]++; } else if(ji&&!ij){ sonra[j].push(i); gir[i]++; }
+  }
+  const hazir=[], cikti=[], kullanildi=new Array(n).fill(false);
+  for(let i=0;i<n;i++) if(!gir[i]) hazir.push(i);
+  while(cikti.length<n){
+    if(!hazir.length){                       // döngü: kalanlardan anahtarı en küçük olanla sürdür
+      let m=-1; for(let i=0;i<n;i++) if(!kullanildi[i]&&(m<0||sira[i]<sira[m])) m=i;
+      hazir.push(m); gir[m]=0;
+    }
+    let k=0; for(let t=1;t<hazir.length;t++) if(sira[hazir[t]]<sira[hazir[k]]) k=t;
+    const i=hazir.splice(k,1)[0]; if(kullanildi[i]) continue;
+    kullanildi[i]=true; cikti.push(bs[i]);
+    sonra[i].forEach(j=>{ if(!kullanildi[j]&&--gir[j]===0) hazir.push(j); });
+  }
+  return cikti;
+}
+
+function renderIso(container, boxes3d, opt){
+  // boxes3d: {x,y,z,dx,dy,dz,c:[top,left,right],stroke}
+  opt=opt||{};
+  const vid=container.id||"";
+  ISO_LAST[vid]={boxes:boxes3d,opt};
+  const vst=ISO_VIEW[vid]||(ISO_VIEW[vid]={rot:0,zoom:1,px:0,py:0});
+  const rot=vst.rot%4;
+  if(rot) boxes3d=rotateScene(boxes3d,rot);
+  let outline=opt.outline;
+  if(outline&&rot%2===1) outline={L:outline.W,W:outline.L,H:outline.H};
+  container.innerHTML="";
+  // compute bounds
+  let minU=1e9,maxU=-1e9,minV=1e9,maxV=-1e9;
+  const S=1;
+  boxes3d.forEach(b=>{
+    const corners=[[b.x,b.y,b.z],[b.x+b.dx,b.y,b.z],[b.x,b.y+b.dy,b.z],[b.x+b.dx,b.y+b.dy,b.z],
+                   [b.x,b.y,b.z+b.dz],[b.x+b.dx,b.y,b.z+b.dz],[b.x,b.y+b.dy,b.z+b.dz],[b.x+b.dx,b.y+b.dy,b.z+b.dz]];
+    corners.forEach(c=>{const[u,v]=isoProj(c[0],c[1],c[2],S);
+      if(u<minU)minU=u;if(u>maxU)maxU=u;if(v<minV)minV=v;if(v>maxV)maxV=v;});
+  });
+  if(!rot&&opt.extraPts)opt.extraPts.forEach(c=>{const[u,v]=isoProj(c[0],c[1],c[2],S);
+    if(u<minU)minU=u;if(u>maxU)maxU=u;if(v<minV)minV=v;if(v>maxV)maxV=v;});
+  // sahne taban sınırları (ölçü etiketleri için — döndürülmüş koordinatlarda)
+  let bx0=1e9,bx1=-1e9,by0=1e9,by1=-1e9,bz1=-1e9;
+  boxes3d.forEach(b=>{bx0=Math.min(bx0,b.x);bx1=Math.max(bx1,b.x+b.dx);
+    by0=Math.min(by0,b.y);by1=Math.max(by1,b.y+b.dy);bz1=Math.max(bz1,b.z+b.dz);});
+  if(opt.dimsInfo){
+    [[bx0,by1+280,0],[bx1,by1+280,0],[bx1+480,by0,0],[bx1+480,by1,0],[bx1+480,by0,bz1],[bx0,by0,bz1+150]]
+      .forEach(c=>{const[u,v]=isoProj(c[0],c[1],c[2],S);
+        if(u<minU)minU=u;if(u>maxU)maxU=u;if(v<minV)minV=v;if(v>maxV)maxV=v;});
+  }
+  if(minU>maxU){minU=0;maxU=1;minV=0;maxV=1;}
+  const pad=(maxU-minU)*0.06+20;
+  const vb=`${(minU-pad).toFixed(1)} ${(minV-pad).toFixed(1)} ${(maxU-minU+2*pad).toFixed(1)} ${(maxV-minV+2*pad).toFixed(1)}`;
+  const svg=el("svg",{viewBox:vb},container);
+  svg.dataset.base=vb;
+  const sorted=derinlikSirala(boxes3d);
+  sorted.forEach(b=>{
+    const x0=b.x,y0=b.y,z0=b.z,x1=b.x+b.dx,y1=b.y+b.dy,z1=b.z+b.dz;
+    const Pn=(x,y,z)=>isoProj(x,y,z,S);
+    const P=(x,y,z)=>Pn(x,y,z).map(n=>n.toFixed(1)).join(",");
+    const st=b.stroke||"#8f8a82";
+    if(b.kind==="drum"){ // silindir görünüm
+      const cx3=b.x+b.dx/2, cy3=b.y+b.dy/2, r2=Math.min(b.dx,b.dy)/2;
+      const top=Pn(cx3,cy3,z1), bot=Pn(cx3,cy3,z0);
+      const rx=r2*1.2247*S, ry=r2*0.7071*S;
+      el("path",{d:`M ${(top[0]-rx).toFixed(1)} ${top[1].toFixed(1)} L ${(bot[0]-rx).toFixed(1)} ${bot[1].toFixed(1)} `+
+        `A ${rx.toFixed(1)} ${ry.toFixed(1)} 0 0 0 ${(bot[0]+rx).toFixed(1)} ${bot[1].toFixed(1)} `+
+        `L ${(top[0]+rx).toFixed(1)} ${top[1].toFixed(1)} Z`,
+        fill:b.c[1],stroke:"#54626e","stroke-width":0.8},svg);
+      el("ellipse",{cx:top[0].toFixed(1),cy:top[1].toFixed(1),rx:rx.toFixed(1),ry:ry.toFixed(1),
+        fill:b.c[0],stroke:"#54626e","stroke-width":0.8},svg);
+      [0.3,0.62].forEach(f=>{const vy=top[1]+(bot[1]-top[1])*f;
+        el("path",{d:`M ${(top[0]-rx).toFixed(1)} ${vy.toFixed(1)} A ${rx.toFixed(1)} ${ry.toFixed(1)} 0 0 0 ${(top[0]+rx).toFixed(1)} ${vy.toFixed(1)}`,
+          fill:"none",stroke:"#54626e","stroke-width":1.4,opacity:0.55},svg);});
+      return;
+    }
+    const fop=b.op?{"fill-opacity":b.op,"stroke-opacity":Math.min(1,(b.op||1)*2)}:{};
+    el("polygon",{points:`${P(x0,y1,z0)} ${P(x1,y1,z0)} ${P(x1,y1,z1)} ${P(x0,y1,z1)}`,fill:b.c[1],stroke:st,"stroke-width":0.6,...fop},svg);
+    el("polygon",{points:`${P(x1,y0,z0)} ${P(x1,y1,z0)} ${P(x1,y1,z1)} ${P(x1,y0,z1)}`,fill:b.c[2],stroke:st,"stroke-width":0.6,...fop},svg);
+    el("polygon",{points:`${P(x0,y0,z1)} ${P(x1,y0,z1)} ${P(x1,y1,z1)} ${P(x0,y1,z1)}`,fill:b.c[0],stroke:st,"stroke-width":0.6,...fop},svg);
+    if(b.kind==="cage"||b.kind==="ibc"){ // tel kafes / IBC kafes çizgileri
+      const dense=b.kind==="cage"?6:3, densez=b.kind==="cage"?5:3;
+      const st2=b.kind==="cage"?"#5b6b7d":"#8b959c", lw2=b.kind==="cage"?1.3:2.4;
+      const L2=(p,q)=>el("line",{x1:p[0].toFixed(1),y1:p[1].toFixed(1),x2:q[0].toFixed(1),y2:q[1].toFixed(1),
+        stroke:st2,"stroke-width":lw2,opacity:0.8},svg);
+      for(let i2=1;i2<dense;i2++){
+        const fx=x0+b.dx*i2/dense, fy=y0+b.dy*i2/dense;
+        L2(Pn(fx,y1,z0),Pn(fx,y1,z1)); L2(Pn(x1,fy,z0),Pn(x1,fy,z1));
+      }
+      for(let k2=1;k2<densez;k2++){
+        const fz=z0+b.dz*k2/densez;
+        L2(Pn(x0,y1,fz),Pn(x1,y1,fz)); L2(Pn(x1,y0,fz),Pn(x1,y1,fz));
+      }
+    }else if(b.kind==="boxwood"){ // ahşap sandık tahta çizgileri
+      const L2=(p,q)=>el("line",{x1:p[0].toFixed(1),y1:p[1].toFixed(1),x2:q[0].toFixed(1),y2:q[1].toFixed(1),
+        stroke:"#8a6d3b","stroke-width":0.9,opacity:0.6},svg);
+      for(let k2=1;k2<5;k2++){
+        const fz=z0+b.dz*k2/5;
+        L2(Pn(x0,y1,fz),Pn(x1,y1,fz)); L2(Pn(x1,y0,fz),Pn(x1,y1,fz));
+      }
+    }
+  });
+  if(outline){ // container wireframe (e.g. carton walls)
+    const {L,W,H}=outline; const P=(x,y,z)=>isoProj(x,y,z,S);
+    const E=[[[0,0,0],[L,0,0]],[[0,0,0],[0,W,0]],[[L,0,0],[L,W,0]],[[0,W,0],[L,W,0]],
+             [[0,0,H],[L,0,H]],[[0,0,H],[0,W,H]],[[L,0,H],[L,W,H]],[[0,W,H],[L,W,H]],
+             [[0,0,0],[0,0,H]],[[L,0,0],[L,0,H]],[[0,W,0],[0,W,H]],[[L,W,0],[L,W,H]]];
+    E.forEach(e2=>{const a=P(...e2[0]),b2=P(...e2[1]);
+      el("line",{x1:a[0],y1:a[1],x2:b2[0],y2:b2[1],stroke:"#c8862a","stroke-width":1.6,"stroke-dasharray":"none",opacity:0.85},svg);});
+  }
+  if(!rot&&opt.decor) opt.decor(svg,(x,y,z)=>isoProj(x,y,z,S));
+  if(opt.dimsInfo){ // ölçü etiketleri — her döndürmede doğru kenara yazılır
+    const di=opt.dimsInfo;
+    const Ln=rot%2?di.W:di.L, Wn=rot%2?di.L:di.W;
+    const P2=(x,y,z)=>isoProj(x,y,z,S);
+    const dl=(p1,p2,txt,dx,dy)=>{
+      el("line",{x1:p1[0].toFixed(1),y1:p1[1].toFixed(1),x2:p2[0].toFixed(1),y2:p2[1].toFixed(1),stroke:"#888","stroke-width":3},svg);
+      const t=el("text",{x:((p1[0]+p2[0])/2+(dx||0)).toFixed(1),y:((p1[1]+p2[1])/2+(dy||0)).toFixed(1),
+        "font-size":68,"font-weight":"bold",fill:"#444","text-anchor":"middle","font-family":"sans-serif"},svg);
+      t.textContent=txt;
+    };
+    dl(P2(bx0,by1+120,0),P2(bx1,by1+120,0),`${fmt(Ln)} mm`,0,88);
+    dl(P2(bx1+130,by0,0),P2(bx1+130,by1,0),`${fmt(Wn)} mm`,150,40);
+    dl(P2(bx1+130,by0,0),P2(bx1+130,by0,bz1),`${fmt(di.Ht)} mm`,230,-30);
+    if(di.box){
+      const tk=el("text",{x:(P2(bx0,by0,bz1)[0]+30).toFixed(1),y:(P2(bx0,by0,bz1)[1]-40).toFixed(1),
+        "font-size":68,"font-weight":"bold",fill:"#666","text-anchor":"start","font-family":"sans-serif"},svg);
+      tk.textContent="Koli: "+di.box;
+    }
+  }
+  applyZoom(svg,vst);
+}
+
+function palletParts(PL,PW,PH,wing){
+  // wing: 0=normal, 1=tek kanatlı (üst tabla taşar), 2=çift kanatlı (üst+alt tabla taşar)
+  const parts=[]; const c=["#e9cd92","#dab26b","#bd9754"], st="#8a6d3b";
+  const t1=PH*0.15, tb=PH*0.55, t2=PH*0.30; // bottom boards, blocks, deck
+  const ins=wing?Math.min(90,PW*0.09):0;    // saçak payı: gövde içeride kalır
+  const by0=ins, bw=PW-2*ins;
+  if(wing===2) parts.push({x:0,y:0,z:0,dx:PL,dy:PW,dz:t1,c,stroke:st});     // alt tabla da taşar
+  else         parts.push({x:0,y:by0,z:0,dx:PL,dy:bw,dz:t1,c,stroke:st});
+  const bs=145, xs=[0,(PL-bs)/2,PL-bs];
+  const ys=[by0,by0+(bw-bs)/2,by0+bw-bs];
+  ys.forEach(y=>xs.forEach(x=>parts.push({x,y,z:t1,dx:bs,dy:Math.min(bs,bw),dz:tb,c,stroke:st})));
+  parts.push({x:0,y:0,z:t1+tb,dx:PL,dy:PW,dz:t2,c,stroke:st});              // üst tabla tam (taşar)
+  return parts;
+}
+
+/* ---------- manual selects ---------- */
+const DIMNAMES=["Uzunluk","Genişlik","Yükseklik"];
+function fillVertSelect(sel, dims){
+  const cur=sel.value; sel.innerHTML="";
+  dims.forEach((d,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${d} mm (${DIMNAMES[i]})`;sel.appendChild(o);});
+  sel.value = (cur!=="" && cur<3) ? cur : 2;
+}
+function fillAlongSelect(sel, dims, vi){
+  const cur=sel.value; sel.innerHTML="";
+  const rest=dims.map((d,i)=>({d,i})).filter(o=>o.i!==Number(vi));
+  rest.forEach((o,k)=>{const op=document.createElement("option");op.value=k;op.textContent=`${o.d} mm (${DIMNAMES[o.i]})`;sel.appendChild(op);});
+  if(cur!=="" && Number(cur)<2) sel.value=cur;
+}
+
+/* ---------- stat / msg helpers ---------- */
+function stat(v,k,big){return `<div class="stat"><div class="v${big?' big':''}">${v}</div><div class="k">${k}</div></div>`;}
+function fmt(n){return n.toLocaleString("tr-TR");}
+
+/* ---------- main compute ---------- */
+function compute(){
+  const PL=num("pL",1200), PW=num("pW",800), PH=num("pH",144);
+  const maxH=num("maxH",2400), maxLayers=num("maxLayers",0);
+  const dims=[num("bL"),num("bW"),num("bH")];
+  const allowLay=$("allowLay").checked;
+  const availH=Math.max(0,maxH-PH);
+  const tare=num("bKg",0), palletKg=num("pKg",0);
+  const ov=$("ovOn").checked?Math.max(0,num("ovMM",0)):0;
+  const PL2=PL+2*ov, PW2=PW+2*ov;   // taşma dahil yerleşim alanı
+
+  fillVertSelect($("mpVert"),dims);
+  fillAlongSelect($("mpAlong"),dims,$("mpVert").value);
+
+  /* ---- product layout first (weights need it) ---- */
+  const on=$("prodOn").checked;
+  $("prodCard").classList.toggle("hidden",!on);
+  $("prodInputs").classList.toggle("hidden",!on);
+  let pres=null, udims=null, IL=0, IW=0, IH=0, pmsgs=[];
+  const oppQty = prodUnit==="opp" ? Math.max(1,num("oppQty",1)) : 1;
+  const unitKg = num("uKg",0);
+  if(on){
+    udims=[num("uL"),num("uW"),num("uH")];
+    IL=numOr("iL",dims[0]); IW=numOr("iW",dims[1]); IH=numOr("iH",dims[2]);
+    fillVertSelect($("muVert"),udims);
+    fillAlongSelect($("muAlong"),udims,$("muVert").value);
+    if(prodMode==="auto"){
+      pres=autoLayout(IL,IW,IH,udims,$("uAllowLay").checked,0);
+    }else{
+      const vi=Number($("muVert").value), ai=Number($("muAlong").value);
+      pres=manualLayout(IL,IW,IH,udims,vi,ai,num("muNL",0),num("muNW",0),num("muNZ",0),0);
+      $("muNL").placeholder=pres.maxNL; $("muNW").placeholder=pres.maxNW; $("muNZ").placeholder=pres.maxNZ;
+      if(pres.overX)pmsgs.push(`⚠️ Koli uzunluğunda taşma (${pres.nL} × ${pres.fl} = ${pres.nL*pres.fl} mm > ${IL} mm)`);
+      if(pres.overY)pmsgs.push(`⚠️ Koli genişliğinde taşma (${pres.nW} × ${pres.fw} = ${pres.nW*pres.fw} mm > ${IW} mm)`);
+      if(pres.overZ)pmsgs.push(`⚠️ Koli yüksekliğinde aşım (${pres.nz} × ${pres.fh} = ${pres.nz*pres.fh} mm > ${IH} mm)`);
+    }
+  }
+  const contentKg=(pres&&unitKg>0)?pres.total*unitKg:0;
+  const boxKg=tare+contentKg;
+
+  let res, msgs=[];
+  if(palletMode==="auto"){
+    const all=autoLayoutAll(PL2,PW2,availH,dims,allowLay,maxLayers);
+    const th=num("effTh",0);
+    autoCands=all.filter(c=>c.areaEff>=th);
+    if(!autoCands.length&&all.length)autoCands=[all[0]];
+    if(autoSel>=autoCands.length)autoSel=0;
+    res=autoCands[autoSel]||{rects:[],perLayer:0,nz:0,fh:dims[2],total:0,vi:2,fl:dims[0],fw:dims[1]};
+  }else{
+    autoCands=[];autoSel=0;
+    const vi=Number($("mpVert").value), ai=Number($("mpAlong").value);
+    res=manualLayout(PL2,PW2,availH,dims,vi,ai,num("mpNL",0),num("mpNW",0),num("mpNZ",0),maxLayers);
+    $("mpNL").placeholder=res.maxNL; $("mpNW").placeholder=res.maxNW; $("mpNZ").placeholder=res.maxNZ;
+    if(res.overX)msgs.push(`⚠️ Uzun kenarda izinli sınır aşıldı: ${res.nL} × ${res.fl} = ${res.nL*res.fl} mm > ${PL2} mm${ov?" (taşma dahil)":""}`);
+    if(res.overY)msgs.push(`⚠️ Kısa kenarda izinli sınır aşıldı: ${res.nW} × ${res.fw} = ${res.nW*res.fw} mm > ${PW2} mm${ov?" (taşma dahil)":""}`);
+    if(res.overZ)msgs.push(`⚠️ Yükseklik aşımı: ${res.nz} sıra × ${res.fh} mm + palet = ${res.nz*res.fh+PH} mm > ${maxH} mm`);
+  }
+
+  /* ---- stacking pattern (brick / interlock) ---- */
+  const pattern=$("stackPattern").value;
+  const layerA=res.rects;
+  const rot180=r=>({x:PL2-r.x-r.w, y:PW2-r.y-r.h, w:r.w, h:r.h});
+  const altLay=twoBlock(PL2,PW2,res.fw,res.fl); // swapped orientation layer
+  let layerB=layerA, layerBCount=res.perLayer;
+  if(pattern==="rot180"){ layerB=layerA.map(rot180); layerBCount=res.perLayer; }
+  if(pattern==="alt"){ layerB=altLay.rects; layerBCount=altLay.count; }
+  const nA=Math.ceil(res.nz/2), nB=Math.floor(res.nz/2);
+  const totB = nA*res.perLayer + nB*layerBCount;
+  const kolonTotal=res.perLayer*res.nz;
+  const altTotal=nA*res.perLayer+nB*altLay.count;
+  $("patternCompare").innerHTML =
+    `Karşılaştırma — Kolonlu: <b>${fmt(kolonTotal)}</b> • 180° şaşırtmalı: <b>${fmt(kolonTotal)}</b> • Yön değişimli: <b>${fmt(altTotal)}</b> koli/palet`;
+
+  const totalH=PH+res.nz*res.fh;
+  const areaEff = res.rects.length? (res.rects.reduce((s,r)=>s+r.w*r.h,0)/(PL2*PW2)*100) : 0;
+  const volEff2 = (totalH-PH)>0 ? (totB*dims[0]*dims[1]*dims[2])/(PL*PW*(totalH-PH))*100 : 0;
+
+  /* ---- strapping, corner boards, weights ---- */
+  const nS=num("nStrapS",0), nLs=num("nStrapL",0), lockPay=0.4;
+  const lenS=2*(PW+totalH)/1000+lockPay, lenL=2*(PL+totalH)/1000+lockPay;
+  const strapTot=nS*lenS+nLs*lenL;
+  const cOn=$("cbCorner").checked, cN=Math.max(0,num("cornerN",4));
+  const cLen=numOr("cornerLen",res.nz*res.fh);
+  // çember altı küçük köşebent
+  const seOn=$("cbStrapEdge").checked, seN=Math.max(0,num("strapEdgeN",2));
+  const seTot=seOn?seN*(nS+nLs):0;
+  // streç film
+  const bA=layerA.length?{minX:Math.min(...layerA.map(r=>r.x)),maxX:Math.max(...layerA.map(r=>r.x+r.w)),
+                          minY:Math.min(...layerA.map(r=>r.y)),maxY:Math.max(...layerA.map(r=>r.y+r.h))}:null;
+  const loadL=bA?bA.maxX-bA.minX:PL, loadW=bA?bA.maxY-bA.minY:PW;
+  const stOn=$("stOn").checked, stKat=Math.max(1,num("stKat",2)), stWmm=Math.max(100,num("stW",500));
+  const stPerim=2*(loadL+loadW)/1000;
+  const stM2=stOn?stPerim*(totalH/1000)*stKat:0;
+  const stLen=stOn&&stWmm>0?stM2/(stWmm/1000):0;
+  const netKg=totB*boxKg, grossKg=netKg+palletKg, layerKg=res.perLayer*boxKg;
+
+  $("palletStats").innerHTML =
+    stat(fmt(totB),"Toplam koli",true)+
+    stat(pattern==="alt"&&layerBCount!==res.perLayer ? `${res.perLayer} / ${layerBCount}` : res.perLayer,"Koli / sıra")+
+    stat(res.nz,"Sıra sayısı")+
+    stat(`${fmt(totalH)} mm`,"Toplam yükseklik")+
+    stat(`%${areaEff.toFixed(1)}`,"Alan verimi")+
+    (strapTot>0 ? stat(`${strapTot.toFixed(1)} m`,"Toplam çember") : "")+
+    stat(cOn ? `${cN} adet` : "Yok","Köşebent")+
+    (stOn ? stat(`${stM2.toFixed(1)} m²`,"Streç film") : "")+
+    (boxKg>0 ? stat(`${boxKg.toFixed(2)} kg`,"Dolu koli") : "")+
+    (boxKg>0||palletKg>0 ? stat(`${fmt(Math.round(grossKg))} kg`,"Brüt palet") : "");
+
+  $("palletMsgs").innerHTML = msgs.map(m=>`<div class="msg warn">${m}</div>`).join("") +
+    (palletMode==="auto" && totB>0 ? `<div class="msg info">En uygun yerleşim otomatik seçildi — dik ölçü: <b>${res.fh} mm</b>, sıra başına <b>${res.perLayer}</b> koli.</div>` : "") +
+    (pattern==="alt"&&layerBCount<res.perLayer ? `<div class="msg info">Yön değişimli örgüde çift sıralar <b>${layerBCount}</b> koli alır — stabilite artar, toplam <b>${fmt(kolonTotal-totB)}</b> koli azalır.</div>` : "");
+
+  const seenTot={};
+  $("autoOptions").innerHTML = (palletMode==="auto"&&autoCands.length>1) ?
+    '<div class="optrow">'+autoCands.map((c,i)=>{
+      const nth=(seenTot[c.total]=(seenTot[c.total]||0)+1);
+      return `<button class="opt${i===autoSel?" on":""}" onclick="pickAuto(${i})">`+
+      `${i+1}) ${c.perLayer}/sıra × ${c.nz} sıra = <b>${fmt(c.total)}</b> koli `+
+      `<span class="pct">• alan %${c.areaEff.toFixed(1)}${c.vi!==2?" • yatık":""}${c.adv?" • gelişmiş örgü":(c.mixed?" • karışık":"")}${nth>1?` • ${nth}. düzen`:""}</span></button>`;
+    }).join("")+'</div>' : "";
+
+  const shf=r=>({x:r.x-ov,y:r.y-ov,w:r.w,h:r.h});
+  const drawA=ov?layerA.map(shf):layerA, drawB=ov?layerB.map(shf):layerB;
+  $("palletTopTitle").textContent = pattern==="kolon" ? "Üstten görünüş — 1 sıra" : "Üstten görünüş — tek sıra (dolu) + çift sıra (kırmızı kesikli)";
+  renderTop($("palletTop"),PL,PW,drawA,{overlay: pattern!=="kolon" ? drawB : null, ovh:ov, dims:$("showDims").checked});
+  const boxes=[...palletParts(PL,PW,PH,palletWing)];
+  const cart=["#f7f5f0","#edeae4","#d9d5cd"], cartB=["#f2ede2","#e6dfd0","#d2c9b8"];
+  for(let k=0;k<res.nz;k++){
+    const rects = (k%2===1) ? drawB : drawA;
+    const col = (k%2===1 && pattern!=="kolon") ? cartB : cart;
+    rects.forEach(r=>boxes.push({x:r.x,y:r.y,z:PH+k*res.fh,dx:r.w,dy:r.h,dz:res.fh,c:col}));
+  }
+  // ambalaj öğeleri 3B nesne olarak eklenir — döndürmede de görünür
+  if(drawA.length&&res.nz>0){
+    const minX=Math.min(...drawA.map(r=>r.x)), maxX=Math.max(...drawA.map(r=>r.x+r.w));
+    const minY=Math.min(...drawA.map(r=>r.y)), maxY=Math.max(...drawA.map(r=>r.y+r.h));
+    const zTop=PH+res.nz*res.fh;
+    // katman kalınlıkları: köşebent (kt) yükün dışında, film onun dışında, çember en dışta
+    const kt=14, koseVar=cOn&&cN>0, fK=koseVar?kt:0, fT=3, cK=fK+(stOn?fT:0);
+    // streç film: 4 yarı saydam duvar
+    if(stOn){
+      const fc=["#bcd8e8","#a8c8dc","#93b8cf"];
+      boxes.push({x:minX-fK-2,y:maxY+fK,z:0,dx:maxX-minX+2*fK+4,dy:fT,dz:zTop,c:fc,op:0.22,stroke:"#8fb8cf"});
+      boxes.push({x:minX-fK-2,y:minY-fK-fT,z:0,dx:maxX-minX+2*fK+4,dy:fT,dz:zTop,c:fc,op:0.22,stroke:"#8fb8cf"});
+      boxes.push({x:maxX+fK,y:minY-fK-2,z:0,dx:fT,dy:maxY-minY+2*fK+4,dz:zTop,c:fc,op:0.22,stroke:"#8fb8cf"});
+      boxes.push({x:minX-fK-fT,y:minY-fK-2,z:0,dx:fT,dy:maxY-minY+2*fK+4,dz:zTop,c:fc,op:0.22,stroke:"#8fb8cf"});
+    }
+    // köşebent: 4 köşede L-profil dikmeler
+    if(cOn&&cN>0){
+      const kc=["#d8a75a","#c8862a","#a96f1e"], kw=70;
+      const zk=PH+Math.min(cLen,res.nz*res.fh);
+      const corners=[[minX,minY,1,1],[maxX,minY,-1,1],[minX,maxY,1,-1],[maxX,maxY,-1,-1]];
+      corners.forEach(([cx2,cy2,sx,sy])=>{
+        boxes.push({x:sx>0?cx2:cx2-kw, y:sy>0?cy2-kt:cy2, z:PH, dx:kw, dy:kt, dz:zk-PH, c:kc, stroke:"#8a5c1e"});
+        boxes.push({x:sx>0?cx2-kt:cx2, y:sy>0?cy2:cy2-kw, z:PH, dx:kt, dy:kw, dz:zk-PH, c:kc, stroke:"#8a5c1e"});
+      });
+    }
+    // çemberler: üst + ön + arka koşular (ince bantlar)
+    const bc=["#2e7d9b","#1f6f8b","#175a72"], bw2=22, bt=6;
+    for(let i=0;i<nS;i++){
+      const xi=minX+(i+0.5)*(maxX-minX)/Math.max(1,nS);
+      boxes.push({x:xi-bw2/2,y:minY-cK-bt,z:zTop,dx:bw2,dy:maxY-minY+2*(cK+bt),dz:bt,c:bc,stroke:"#14495e"});
+      boxes.push({x:xi-bw2/2,y:maxY+cK,z:0,dx:bw2,dy:bt,dz:zTop+bt,c:bc,stroke:"#14495e"});
+      boxes.push({x:xi-bw2/2,y:minY-cK-bt,z:0,dx:bw2,dy:bt,dz:zTop+bt,c:bc,stroke:"#14495e"});
+    }
+    for(let j=0;j<nLs;j++){
+      const yj=minY+(j+0.5)*(maxY-minY)/Math.max(1,nLs);
+      boxes.push({x:minX-cK-bt,y:yj-bw2/2,z:zTop,dx:maxX-minX+2*(cK+bt),dy:bw2,dz:bt,c:bc,stroke:"#14495e"});
+      boxes.push({x:maxX+cK,y:yj-bw2/2,z:0,dx:bt,dy:bw2,dz:zTop+bt,c:bc,stroke:"#14495e"});
+      boxes.push({x:minX-cK-bt,y:yj-bw2/2,z:0,dx:bt,dy:bw2,dz:zTop+bt,c:bc,stroke:"#14495e"});
+    }
+    // çember altı küçük köşebentler: bant kesişimlerinde üst kenar plakaları
+    if(seOn&&seN>0){
+      const sc2=["#e0b269","#d19b3f","#b57f27"];
+      for(let i=0;i<nS;i++){
+        const xi=minX+(i+0.5)*(maxX-minX)/Math.max(1,nS);
+        boxes.push({x:xi-60,y:maxY-12,z:zTop,dx:120,dy:16,dz:10,c:sc2,stroke:"#8a5c1e"});
+        boxes.push({x:xi-60,y:minY-4,z:zTop,dx:120,dy:16,dz:10,c:sc2,stroke:"#8a5c1e"});
+      }
+      for(let j=0;j<nLs;j++){
+        const yj=minY+(j+0.5)*(maxY-minY)/Math.max(1,nLs);
+        boxes.push({x:maxX-12,y:yj-60,z:zTop,dx:16,dy:120,dz:10,c:sc2,stroke:"#8a5c1e"});
+        boxes.push({x:minX-4,y:yj-60,z:zTop,dx:16,dy:120,dz:10,c:sc2,stroke:"#8a5c1e"});
+      }
+    }
+  }
+  renderIso($("palletIso"),boxes,{
+    dimsInfo: $("showDims").checked ? {L:PL,W:PW,Ht:PH+res.nz*res.fh,box:`${dims[0]} × ${dims[1]} × ${dims[2]} mm`} : null
+  });
+
+  const patName={kolon:"kolonlu",rot180:"şaşırtmalı (180°)",alt:"şaşırtmalı (yön değişimli)"}[pattern];
+  $("palletDetail").innerHTML =
+    `Palet: <b>${PL} × ${PW} × ${PH} mm</b> &nbsp;•&nbsp; Koli: <b>${dims[0]} × ${dims[1]} × ${dims[2]} mm</b> &nbsp;•&nbsp; Düzen: <b>${patName}</b><br>`+
+    `İstif: <b>${pattern==="alt"&&layerBCount!==res.perLayer ? `${res.perLayer}+${layerBCount} dönüşümlü` : res.perLayer+" koli/sıra"} × ${res.nz} sıra = ${fmt(totB)} koli</b> &nbsp;•&nbsp; `+
+    `Yük yüksekliği: <b>${fmt(res.nz*res.fh)} mm</b> + palet ${PH} mm = <b>${fmt(totalH)} mm</b> (limit ${fmt(maxH)} mm)`+
+    `&nbsp;•&nbsp; Hacim verimi: <b>%${volEff2.toFixed(1)}</b>`+
+    (ov>0?`&nbsp;•&nbsp; Dışa taşma izni: <b>±${ov} mm/kenar</b> (yerleşim alanı ${PL2} × ${PW2} mm)`:"");
+
+  let pd="";
+  if(strapTot>0){
+    pd+=`🪢 <b>Çember:</b> kısa taraf ${nS} × ${lenS.toFixed(2)} m + uzun taraf ${nLs} × ${lenL.toFixed(2)} m = <b>${strapTot.toFixed(1)} m</b> `+
+        `<span style="color:var(--muted)">(2 × (kenar + ${fmt(totalH)} mm yükseklik) + 0,4 m kilit payı)</span><br>`;
+  }else{
+    pd+=`🪢 <b>Çember:</b> tanımlanmadı<br>`;
+  }
+  pd+= cOn ? `📐 <b>Köşebent:</b> Var — <b>${cN} adet</b> × ${fmt(Math.round(cLen))} mm = <b>${(cN*cLen/1000).toFixed(1)} m</b><br>`
+           : `📐 <b>Köşebent:</b> Yok<br>`;
+  if(seOn&&(nS+nLs)>0)
+    pd+=`📐 <b>Çember köşebendi (küçük):</b> ${nS+nLs} çember × ${seN} = <b>${seTot} adet</b><br>`;
+  pd+= stOn ? `🌀 <b>Streç film:</b> ${stKat} kat × çevre ${stPerim.toFixed(2)} m × yükseklik ${(totalH/1000).toFixed(2)} m = <b>${stM2.toFixed(1)} m²</b> (≈ <b>${fmt(Math.ceil(stLen))} m</b> film, ${stWmm} mm genişlik)<br>`
+            : `🌀 <b>Streç film:</b> kullanılmıyor<br>`;
+  if(boxKg>0||palletKg>0){
+    pd+=`⚖️ <b>Ağırlıklar:</b> Boş koli <b>${tare.toFixed(2)} kg</b>`;
+    if(contentKg>0)pd+=` • Koli içi ürün <b>${contentKg.toFixed(2)} kg</b> (${pres?fmt(pres.total):0} ${prodUnit==="opp"?"OPP":"adet"} × ${unitKg} kg)`;
+    pd+=` • Dolu koli <b>${boxKg.toFixed(2)} kg</b> • 1 sıra <b>${layerKg.toFixed(1)} kg</b>`+
+        ` • Net yük <b>${netKg.toFixed(1)} kg</b> • Palet <b>${palletKg.toFixed(1)} kg</b>`+
+        ` • <b style="color:var(--accent2)">Brüt palet ≈ ${grossKg.toFixed(1)} kg</b>`;
+  }
+  $("packDetail").innerHTML=pd;
+
+  // araç yükleme sekmesi için mevcut palet planını sakla
+  lastCalc={PL,PW,PH,totalH,totB,grossKg:(boxKg>0?grossKg:0),palletKg,
+            prodPerPal:(pres?pres.total*oppQty*totB:0)};
+  if(!$("tabTruck").classList.contains("hidden"))computeTruck();
+
+  /* ---------- product in box (UI) ---------- */
+  if(!on||!pres) return;
+
+  const uLbl = prodUnit==="opp" ? "OPP" : "Ürün";
+  const volU = (IL*IW*IH)>0 ? (pres.total*udims[0]*udims[1]*udims[2])/(IL*IW*IH)*100 : 0;
+  $("prodStats").innerHTML =
+    stat(fmt(pres.total),`${uLbl} / koli`,true)+
+    (prodUnit==="opp" ? stat(fmt(pres.total*oppQty),"Ürün / koli") : "")+
+    stat(pres.perLayer,`${uLbl} / kat`)+
+    stat(pres.nz,"Kat sayısı")+
+    stat(`%${volU.toFixed(1)}`,"Hacim verimi")+
+    stat(fmt(pres.total*totB),`Toplam ${uLbl} / palet`)+
+    (prodUnit==="opp" ? stat(fmt(pres.total*oppQty*totB),"Toplam ürün / palet") : "");
+
+  $("prodMsgs").innerHTML = pmsgs.map(m=>`<div class="msg warn">${m}</div>`).join("") +
+    (prodMode==="auto" && pres.total>0 ? `<div class="msg info">En uygun ürün yerleşimi otomatik seçildi — dik ölçü: <b>${pres.fh} mm</b>.</div>` : "");
+
+  renderTop($("prodTop"),IL,IW,pres.rects,{contFill:"#f3e8d8",contStroke:"#c8862a",boxFill:"#cfe3de",boxStroke:"#7fa8a0"});
+  const pboxes=[]; const pc=["#d8eae5","#c2dcd5","#a8c8c0"];
+  for(let k=0;k<pres.nz;k++)
+    pres.rects.forEach(r=>pboxes.push({x:r.x,y:r.y,z:k*pres.fh,dx:r.w,dy:r.h,dz:pres.fh,c:pc,stroke:"#7fa8a0"}));
+  renderIso($("prodIso"),pboxes,{outline:{L:IL,W:IW,H:IH}});
+
+  $("prodDetail").innerHTML =
+    `Koli iç ölçü: <b>${IL} × ${IW} × ${IH} mm</b> &nbsp;•&nbsp; ${uLbl}: <b>${udims[0]} × ${udims[1]} × ${udims[2]} mm</b>`+
+    (prodUnit==="opp" ? ` &nbsp;•&nbsp; OPP içi <b>${oppQty}</b> ürün` : "")+`<br>`+
+    `Koli başına <b>${fmt(pres.total)} ${uLbl}</b>`+
+    (prodUnit==="opp" ? ` = <b>${fmt(pres.total*oppQty)}</b> ürün` : "")+
+    ` &nbsp;•&nbsp; Palet başına <b>${fmt(totB)} koli × ${fmt(pres.total)} = ${fmt(pres.total*totB)} ${uLbl}</b>`+
+    (prodUnit==="opp" ? ` (toplam <b>${fmt(pres.total*oppQty*totB)}</b> ürün)` : "");
+}
+
+/* ---------- wiring ---------- */
+const PKGMAP={"1200,800,144":25,"1200,1000,162":35,"1000,1200,144":30,"800,600,144":9.5,
+              "800,600,162":11,"600,400,140":5,"1200,1000,150":30,"1140,1140,150":32,
+              "1200,1000,138":20,"1200,800,141":17,"1140,1140,138":24,"1300,1100,138":24,
+              "1140,760,138":15,"1200,1000,156":23,"1300,1100,156":26,"1140,1140,156":28,
+              "1250,1000,150":28,"1250,1000,156":33};
+let palletWing=0;
+$("palletPreset").addEventListener("change",e=>{
+  const v=e.target.value;
+  if(v!=="custom"){
+    const seg=v.split(",");
+    $("pL").value=+seg[0];$("pW").value=+seg[1];$("pH").value=+seg[2];
+    const kg = seg.length>3 ? parseFloat(seg[3]) : PKGMAP[v];
+    if(kg!==undefined&&!isNaN(kg))$("pKg").value=kg;
+    palletWing = seg[4]==="wing1" ? 1 : (seg[4]==="wing2" ? 2 : 0);
+  }
+  compute();
+});
+["pL","pW","pH"].forEach(id=>$(id).addEventListener("input",()=>{$("palletPreset").value="custom";}));
+
+function segWire(segId, cb){
+  $(segId).querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    $(segId).querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); cb(b.dataset.v);
+  }));
+}
+segWire("segPallet",v=>{palletMode=v;$("manPallet").classList.toggle("hidden",v!=="manual");$("effWrap").classList.toggle("hidden",v==="manual");compute();});
+segWire("segProd",  v=>{prodMode=v;  $("manProd").classList.toggle("hidden",v!=="manual");compute();});
+segWire("segUnit",  v=>{prodUnit=v;  $("oppRow").classList.toggle("hidden",v!=="opp");compute();});
+
+document.querySelectorAll("#tabCalc input, #tabCalc select").forEach(i=>i.addEventListener("input",compute));
+document.querySelectorAll("#tabCalc select").forEach(i=>i.addEventListener("change",compute));
+$("prodOn").addEventListener("change",compute);
+$("ovOn").addEventListener("change",()=>{$("ovWrap").classList.toggle("hidden",!$("ovOn").checked);compute();});
+
+/* ================= SUGGESTION MODE ================= */
+function permsOf(d){
+  const idx=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
+  const out=[],seen=new Set();
+  for(const p of idx){
+    const v=[d[p[0]],d[p[1]],d[p[2]]];
+    const k=v.join("|");
+    if(!seen.has(k)){seen.add(k);out.push({v,vertIsH:p[2]===2});}
+  }
+  return out;
+}
+
+const SUGGEST_PALLETS=[
+  {n:"EUR 1 / EPAL — 1200×800×144",L:1200,W:800,H:144,on:true},
+  {n:"EUR 2 / EPAL 2 — 1200×1000×162",L:1200,W:1000,H:162,on:true},
+  {n:"EUR 3 / EPAL 3 — 1000×1200×144",L:1000,W:1200,H:144,on:false},
+  {n:"EUR 6 / EPAL 6 (yarım) — 800×600×144",L:800,W:600,H:144,on:false},
+  {n:"EPAL 7 (yarım) — 800×600×162",L:800,W:600,H:162,on:false},
+  {n:"Düsseldorf (çeyrek) — 600×400×140",L:600,W:400,H:140,on:false},
+  {n:"CP1 — 1200×1000×138",L:1200,W:1000,H:138,on:false},
+  {n:"CP2 — 1200×800×141",L:1200,W:800,H:141,on:false},
+  {n:"CP3 — 1140×1140×138",L:1140,W:1140,H:138,on:false},
+  {n:"CP4 — 1300×1100×138",L:1300,W:1100,H:138,on:false},
+  {n:"CP5 — 1140×760×138",L:1140,W:760,H:138,on:false},
+  {n:"CP6 — 1200×1000×156",L:1200,W:1000,H:156,on:false},
+  {n:"CP7 — 1300×1100×156",L:1300,W:1100,H:156,on:false},
+  {n:"CP8 / CP9 (saçaklı) — 1140×1140×156",L:1140,W:1140,H:156,on:false},
+  {n:"Tek kanatlı — 1250×1000×150",L:1250,W:1000,H:150,on:false},
+  {n:"Çift kanatlı — 1250×1000×156",L:1250,W:1000,H:156,on:false},
+  {n:"CHEP Euro — 1200×800×144",L:1200,W:800,H:144,on:false},
+  {n:"CHEP Endüstriyel — 1200×1000×150",L:1200,W:1000,H:150,on:false},
+  {n:"CHEP Yarım — 800×600×160",L:800,W:600,H:160,on:false},
+  {n:"CHEP Amerikan 48×40\" — 1219×1016×147",L:1219,W:1016,H:147,on:false},
+  {n:"ISO / Endüstriyel — 1200×1000×150",L:1200,W:1000,H:150,on:true},
+  {n:"Konteyner — 1140×1140×150",L:1140,W:1140,H:150,on:true},
+];
+$("spList").innerHTML=SUGGEST_PALLETS.map((p,i)=>
+  `<div class="check"${i===0?' style="margin-top:2px"':''}><input type="checkbox" id="sp_${i}"${p.on?" checked":""}>`+
+  `<label style="margin:0;font-size:12.5px;color:var(--ink)">${p.n}</label></div>`).join("");
+
+let suggestList=[];
+
+function suggest(){
+  const u=[num("sL"),num("sW"),num("sH")];
+  if(u.some(x=>x<=0)){$("suggestResults").innerHTML='<div class="card"><div class="msg warn">Lütfen geçerli ürün ölçüleri girin.</div></div>';return;}
+  const uKg=num("sKg",0), allowLayU=$("sAllowLay").checked;
+  const minN=Math.max(1,num("sMinN",1)), maxN=Math.max(minN,num("sMaxN",40));
+  const t=num("sT",4), maxDim=num("sMaxDim",600), maxKg=num("sMaxKg",0);
+  const boxLay=$("sBoxLay").checked, maxH=num("sMaxH",2400);
+  const pallets=SUGGEST_PALLETS
+    .map((p,i)=>({name:p.n.split(" — ")[0]+" "+p.L+"×"+p.W, L:p.L,W:p.W,H:p.H, on:$("sp_"+i).checked}))
+    .filter(p=>p.on);
+  if(!pallets.length){$("suggestResults").innerHTML='<div class="card"><div class="msg warn">En az bir palet tipi seçin.</div></div>';return;}
+
+  const cands=new Map();
+  for(const perm of permsOf(u)){
+    if(!allowLayU && !perm.vertIsH) continue;
+    const [a,b,c]=perm.v;
+    const mx=Math.min(30,Math.floor((maxDim-2*t)/a)),
+          my=Math.min(30,Math.floor((maxDim-2*t)/b)),
+          mz=Math.min(30,Math.floor((maxDim-2*t)/c));
+    for(let nx=1;nx<=mx;nx++)for(let ny=1;ny<=my;ny++)for(let nz=1;nz<=mz;nz++){
+      const N=nx*ny*nz;
+      if(N<minN||N>maxN) continue;
+      if(uKg>0&&maxKg>0&&N*uKg>maxKg) continue;
+      const inner=[nx*a,ny*b,nz*c];
+      const outer=inner.map(x=>x+2*t);
+      if(outer.some(x=>x>maxDim)) continue;
+      for(const pal of pallets){
+        const availH=Math.max(0,maxH-pal.H);
+        const lay=autoLayout(pal.L,pal.W,availH,outer,boxLay,0);
+        if(!lay.total) continue;
+        const prodPal=N*lay.total;
+        const stackH=lay.nz*lay.fh;
+        const volEff=stackH>0?(prodPal*a*b*c)/(pal.L*pal.W*stackH)*100:0;
+        const key=[...outer].map(Math.round).sort((x,y)=>x-y).join("x")+"|"+pal.name;
+        const altCount=twoBlock(pal.L,pal.W,lay.fw,lay.fl).count;
+        const cand={prodPal,N,nx,ny,nz,perm:perm.v,inner,outer,pal,lay,volEff,uKg,t,altCount};
+        const prev=cands.get(key);
+        if(!prev||prodPal>prev.prodPal||(prodPal===prev.prodPal&&volEff>prev.volEff))cands.set(key,cand);
+      }
+    }
+  }
+
+  const all=[...cands.values()].sort((x,y)=>y.prodPal-x.prodPal||y.volEff-x.volEff);
+  // variety: max 2 per pallet type first, then fill
+  const picked=[],cnt={};
+  for(const c of all){if(picked.length>=6)break;if((cnt[c.pal.name]||0)>=2)continue;picked.push(c);cnt[c.pal.name]=(cnt[c.pal.name]||0)+1;}
+  for(const c of all){if(picked.length>=6)break;if(!picked.includes(c))picked.push(c);}
+  suggestList=picked;
+
+  if(!picked.length){$("suggestResults").innerHTML='<div class="card"><div class="msg warn">Bu kurallarla uygun kombinasyon bulunamadı — adet aralığını veya maks. koli kenarını genişletmeyi deneyin.</div></div>';return;}
+
+  let html="";
+  picked.forEach((c,i)=>{
+    const totH=c.pal.H+c.lay.nz*c.lay.fh;
+    const kgTxt=(c.uKg>0)?` &nbsp;•&nbsp; Koli ağırlığı ≈ <b>${(c.N*c.uKg).toFixed(1)} kg</b>, palet yükü ≈ <b>${fmt(Math.round(c.prodPal*c.uKg))} kg</b>`:"";
+    html+=`<div class="card">
+      <div class="althead"><span class="altrank">Alternatif ${i+1}</span>
+        <span class="t">${fmt(c.prodPal)} ürün / palet</span>
+        <span style="color:var(--muted);font-size:13px">${c.pal.name}</span></div>
+      <div class="stats">
+        ${stat(`${Math.round(c.outer[0])}×${Math.round(c.outer[1])}×${Math.round(c.outer[2])}`,"Koli dış ölçü (mm)")}
+        ${stat(`${c.N} (${c.nx}×${c.ny}×${c.nz})`,"Ürün / koli")}
+        ${stat(c.lay.perLayer,"Koli / sıra")}
+        ${stat(c.lay.nz,"Sıra")}
+        ${stat(fmt(c.lay.total),"Koli / palet")}
+        ${stat(`${fmt(totH)} mm`,"Toplam yük.")}
+        ${stat(`%${c.volEff.toFixed(1)}`,"Hacim verimi")}
+      </div>
+      <div class="views">
+        <div class="viewbox"><h3>Koli içi — 1 kat (ürün ${c.perm[0]}×${c.perm[1]}, dik ölçü ${c.perm[2]} mm)</h3><div id="sgBox${i}"></div></div>
+        <div class="viewbox"><h3>Palet üstü — 1 sıra</h3><div id="sgPal${i}"></div></div>
+      </div>
+      <div class="detail">Koli iç ölçü: <b>${Math.round(c.inner[0])} × ${Math.round(c.inner[1])} × ${Math.round(c.inner[2])} mm</b>
+        &nbsp;•&nbsp; İstif: <b>${c.lay.perLayer} × ${c.lay.nz} = ${fmt(c.lay.total)} koli</b>
+        &nbsp;•&nbsp; Ürün: <b>${fmt(c.prodPal)} adet/palet</b>${kgTxt}<br>
+        Tuğla örgü seçeneği: 180° şaşırtmalı aynı adet (<b>${fmt(c.lay.total)}</b> koli) — yön değişimli örgü: <b>${fmt(Math.ceil(c.lay.nz/2)*c.lay.perLayer+Math.floor(c.lay.nz/2)*c.altCount)}</b> koli (${fmt(Math.ceil(c.lay.nz/2)*c.lay.perLayer*c.N+Math.floor(c.lay.nz/2)*c.altCount*c.N)} ürün)</div>
+      <button class="btn small" onclick="applyAlt(${i})">➜ Bu alternatifi hesaplayıcıya aktar</button>
+    </div>`;
+  });
+  $("suggestResults").innerHTML=html;
+
+  picked.forEach((c,i)=>{
+    const prects=[];
+    for(let x=0;x<c.nx;x++)for(let y=0;y<c.ny;y++)prects.push({x:x*c.perm[0],y:y*c.perm[1],w:c.perm[0],h:c.perm[1]});
+    renderTop($("sgBox"+i),c.inner[0],c.inner[1],prects,{contFill:"#f3e8d8",contStroke:"#c8862a",boxFill:"#cfe3de",boxStroke:"#7fa8a0"});
+    renderTop($("sgPal"+i),c.pal.L,c.pal.W,c.lay.rects,{});
+  });
+}
+
+window.applyAlt=function(i){
+  const c=suggestList[i]; if(!c)return;
+  $("uL").value=num("sL");$("uW").value=num("sW");$("uH").value=num("sH");
+  $("bL").value=Math.round(c.outer[0]);$("bW").value=Math.round(c.outer[1]);$("bH").value=Math.round(c.outer[2]);
+  $("iL").value=Math.round(c.inner[0]);$("iW").value=Math.round(c.inner[1]);$("iH").value=Math.round(c.inner[2]);
+  $("prodOn").checked=true;
+  $("uAllowLay").checked=$("sAllowLay").checked;
+  $("allowLay").checked=$("sBoxLay").checked;
+  $("palletPreset").value="custom";
+  $("pL").value=c.pal.L;$("pW").value=c.pal.W;$("pH").value=c.pal.H;
+  $("maxH").value=num("sMaxH",2400);
+  $("uKg").value=$("sKg").value||"";
+  showTab("calc");
+  compute();
+};
+
+/* ================= EXPORT (PNG / PDF) ================= */
+function svgToImage(svgEl,widthPx){
+  return new Promise(res=>{
+    const clone=svgEl.cloneNode(true);
+    const vb=svgEl.getAttribute("viewBox").split(/\s+/).map(Number);
+    const ar=vb[3]/vb[2];
+    clone.setAttribute("width",widthPx);
+    clone.setAttribute("height",Math.round(widthPx*ar));
+    clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+    const xml=new XMLSerializer().serializeToString(clone);
+    const img=new Image();
+    img.onload=()=>res({img,w:widthPx,h:Math.round(widthPx*ar)});
+    img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(xml);
+  });
+}
+let logoImg=null;
+$("logoFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{logoImg=new Image();logoImg.src=rd.result;};
+  rd.readAsDataURL(f);
+});
+function drawLetterhead(g,W,pageNo,pageTot){
+  g.strokeStyle="#444";g.lineWidth=2;
+  g.strokeRect(30,25,W-60,110);
+  g.beginPath();g.moveTo(440,25);g.lineTo(440,135);g.moveTo(W-400,25);g.lineTo(W-400,135);g.stroke();
+  if(logoImg&&logoImg.complete&&logoImg.naturalWidth){
+    const r=Math.min(350/logoImg.naturalWidth,90/logoImg.naturalHeight);
+    g.drawImage(logoImg,55,80-logoImg.naturalHeight*r/2,logoImg.naturalWidth*r,logoImg.naturalHeight*r);
+  }else{
+    g.font="bold italic 54px sans-serif";g.fillStyle="#1f6f8b";
+    g.fillText("Sanifoam",70,98);
+  }
+  g.fillStyle="#222";g.font="bold 38px sans-serif";g.textAlign="center";
+  g.fillText($("repTitle").value||"AMBALAJ TALİMATI",(440+(W-400))/2,95);
+  g.textAlign="left";
+  g.font="22px sans-serif";g.fillStyle="#333";
+  g.fillText("Doküman No: "+($("repNo").value||"—"),W-380,58);
+  g.fillText("Tarih: "+new Date().toLocaleDateString("tr-TR"),W-380,88);
+  g.fillText(`Sayfa: ${pageNo}/${pageTot}`,W-380,118);
+}
+async function buildExport(){
+  const mode=$("expMode").value;
+  const isoSvg=$("palletIso").querySelector("svg");
+  const topSvg=$("palletTop").querySelector("svg");
+  const W=1900,H=1560;
+  const cv=document.createElement("canvas");cv.width=W;cv.height=H;
+  const g=cv.getContext("2d");
+  g.fillStyle="#ffffff";g.fillRect(0,0,W,H);
+  drawLetterhead(g,W,1,1);
+  /* ---- özet satırları ---- */
+  g.font="21px sans-serif";g.fillStyle="#555";
+  const det=($("palletDetail").innerText||"").split("\n");
+  g.fillText(det[0]||"",40,172);
+  g.fillText(det[1]||"",40,200);
+  const statsArr=[...document.querySelectorAll("#palletStats .stat")]
+    .map(s=>s.querySelector(".k").textContent+": "+s.querySelector(".v").textContent);
+  const half=Math.ceil(statsArr.length/2);
+  g.font="19px sans-serif";g.fillStyle="#777";
+  g.fillText(statsArr.slice(0,half).join("   •   "),40,230);
+  g.fillText(statsArr.slice(half).join("   •   "),40,258);
+  /* ---- çizimler ---- */
+  const matsY=H-330;
+  const areaY=276, areaH=matsY-areaY-15;
+  if(mode==="both"&&topSvg){
+    const t=await svgToImage(topSvg,860);
+    let tw=t.w,th=t.h; if(th>areaH){tw*=areaH/th;th=areaH;}
+    g.drawImage(t.img,40,areaY+(areaH-th)/2,tw,th);
+    const i=await svgToImage(isoSvg,900);
+    let iw=i.w,ih=i.h; if(ih>areaH){iw*=areaH/ih;ih=areaH;}
+    g.drawImage(i.img,940+(920-iw)/2,areaY,iw,ih);
+  }else if(isoSvg){
+    const i=await svgToImage(isoSvg,1300);
+    let iw=i.w,ih=i.h; if(ih>areaH){iw*=areaH/ih;ih=areaH;}
+    g.drawImage(i.img,(W-iw)/2,areaY,iw,ih);
+  }
+  /* ---- ambalaj malzemeleri ---- */
+  g.strokeStyle="#bbb";g.lineWidth=1;
+  g.beginPath();g.moveTo(40,matsY-8);g.lineTo(W-40,matsY-8);g.stroke();
+  g.fillStyle="#333";g.font="bold 25px sans-serif";
+  g.fillText("Ambalaj Malzemeleri ve Ağırlıklar",40,matsY+24);
+  g.font="21px sans-serif";g.fillStyle="#444";
+  let my=matsY+58;
+  ($("packDetail").innerText||"").split("\n").filter(Boolean).forEach(l=>{
+    g.fillText(l,40,my);my+=30;
+  });
+  const pd2=$("prodCard").classList.contains("hidden")?"":($("prodDetail").innerText||"").split("\n").join("  •  ");
+  if(pd2){g.fillStyle="#666";g.fillText("Koli içi: "+pd2.substring(0,150),40,my);}
+  /* ---- imza kutuları ---- */
+  g.strokeStyle="#444";g.lineWidth=1.5;
+  g.strokeRect(W-640,H-140,290,105);g.strokeRect(W-330,H-140,290,105);
+  g.fillStyle="#333";g.font="bold 20px sans-serif";
+  g.fillText("Hazırlayan",W-620,H-112);g.fillText("Onaylayan",W-310,H-112);
+  return cv;
+}
+$("btnPng").addEventListener("click",async()=>{
+  const cv=await buildExport();
+  const a=document.createElement("a");
+  a.download="ambalaj_talimati_"+($("repNo").value||"plan")+".png";
+  a.href=cv.toDataURL("image/png");
+  a.click();
+});
+$("btnPdf").addEventListener("click",async()=>{
+  const cv=await buildExport();
+  if(!window.jspdf){
+    $("palletMsgs").insertAdjacentHTML("afterbegin",
+      '<div class="msg warn">PDF kütüphanesi yüklenemedi (internet bağlantısı gerekir) — lütfen PNG olarak indirin.</div>');
+    return;
+  }
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+  const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+  const r=Math.min((pw-16)/cv.width,(ph-16)/cv.height);
+  pdf.addImage(cv.toDataURL("image/png"),"PNG",(pw-cv.width*r)/2,(ph-cv.height*r)/2,cv.width*r,cv.height*r);
+  pdf.save("ambalaj_talimati_"+($("repNo").value||"plan")+".pdf");
+});
+/* ---- Genel Rapor: seçilen bölümler, sayfa başına bir yerleşim ---- */
+function statChips(id){
+  return [...document.querySelectorAll("#"+id+" .stat")]
+    .map(s=>s.querySelector(".k").textContent+": "+s.querySelector(".v").textContent);
+}
+function htmlLines(id){
+  return ($(id).innerHTML||"").split(/<br\s*\/?>/i)
+    .map(s=>s.replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/\s+/g," ").trim())
+    .filter(Boolean);
+}
+async function buildSectionCanvas(cfg,pageNo,pageTot){
+  const W=1900,H=1300;
+  const cv=document.createElement("canvas");cv.width=W;cv.height=H;
+  const g=cv.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,W,H);
+  drawLetterhead(g,W,pageNo,pageTot);
+  g.fillStyle="#1f6f8b";g.font="bold 31px sans-serif";
+  g.fillText(cfg.title,40,182);
+  const arr=cfg.stats||[], half=Math.ceil(arr.length/2);
+  g.font="19px sans-serif";g.fillStyle="#666";
+  g.fillText(arr.slice(0,half).join("   •   "),40,216);
+  g.fillText(arr.slice(half).join("   •   "),40,244);
+  const areaY=264, areaH=H-areaY-155;
+  const svgs=(cfg.svgs||[]).filter(Boolean);
+  if(svgs.length>=2){
+    const t=await svgToImage(svgs[0],860); let tw=t.w,th=t.h; if(th>areaH){tw*=areaH/th;th=areaH;}
+    g.drawImage(t.img,40,areaY+(areaH-th)/2,tw,th);
+    const i=await svgToImage(svgs[1],900); let iw=i.w,ih=i.h; if(ih>areaH){iw*=areaH/ih;ih=areaH;}
+    g.drawImage(i.img,940+(920-iw)/2,areaY,iw,ih);
+  }else if(svgs.length===1){
+    const i=await svgToImage(svgs[0],1200); let iw=i.w,ih=i.h; if(ih>areaH){iw*=areaH/ih;ih=areaH;}
+    g.drawImage(i.img,(W-iw)/2,areaY,iw,ih);
+  }
+  g.strokeStyle="#ccc";g.lineWidth=1;
+  g.beginPath();g.moveTo(40,H-142);g.lineTo(W-40,H-142);g.stroke();
+  g.font="20px sans-serif";g.fillStyle="#444";
+  let y=H-112;
+  (cfg.lines||[]).slice(0,4).forEach(l=>{g.fillText(l.substring(0,165),40,y);y+=29;});
+  return cv;
+}
+async function buildReport(){
+  const want=[];
+  if($("rgProd").checked){
+    if($("prodOn").checked&&$("prodTop").querySelector("svg")) want.push("prod");
+    else $("palletMsgs").insertAdjacentHTML("afterbegin",
+      '<div class="msg info">Koli içi bölümü için önce "Ürün yerleşimini de hesapla" seçeneğini açın — bu bölüm rapora eklenmedi.</div>');
+  }
+  if($("rgPal").checked) want.push("pal");
+  if($("rgVeh").checked){ computeTruck(); if($("vTop").querySelector("svg")) want.push("veh"); }
+  if(!want.length){
+    $("palletMsgs").insertAdjacentHTML("afterbegin",'<div class="msg warn">Rapor için en az bir bölüm seçin.</div>');
+    return null;
+  }
+  const tot=want.length, pages=[]; let n=0;
+  for(const w of want){
+    n++;
+    if(w==="prod") pages.push(await buildSectionCanvas({
+      title:`${n}. KOLİ İÇİ YERLEŞİM (Ürün → Koli)`,
+      svgs:[$("prodTop").querySelector("svg"),$("prodIso").querySelector("svg")],
+      stats:statChips("prodStats"),
+      lines:htmlLines("prodDetail")},n,tot));
+    else if(w==="pal") pages.push(await buildSectionCanvas({
+      title:`${n}. PALET ÜSTÜ YERLEŞİM (Koli → Palet)`,
+      svgs:[$("palletTop").querySelector("svg"),$("palletIso").querySelector("svg")],
+      stats:statChips("palletStats"),
+      lines:[...htmlLines("palletDetail"),...htmlLines("packDetail")]},n,tot));
+    else if(w==="veh") pages.push(await buildSectionCanvas({
+      title:`${n}. ARAÇ YÜKLEME PLANI`,
+      svgs:[$("vTop").querySelector("svg"),$("vIso").querySelector("svg")],
+      stats:statChips("vStats"),
+      lines:[...htmlLines("vPalletInfo"),...htmlLines("vDetail")]},n,tot));
+  }
+  return pages;
+}
+$("btnReport").addEventListener("click",async()=>{
+  const pages=await buildReport(); if(!pages)return;
+  if(window.jspdf){
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+    pages.forEach((cv,i)=>{
+      if(i)pdf.addPage();
+      const r=Math.min((pw-14)/cv.width,(ph-14)/cv.height);
+      pdf.addImage(cv.toDataURL("image/png"),"PNG",(pw-cv.width*r)/2,(ph-cv.height*r)/2,cv.width*r,cv.height*r);
+    });
+    pdf.save("genel_rapor_"+($("repNo").value||"plan")+".pdf");
+  }else{
+    pages.forEach((cv,i)=>{
+      const a=document.createElement("a");
+      a.download=`genel_rapor_s${i+1}.png`;a.href=cv.toDataURL("image/png");a.click();
+    });
+    $("palletMsgs").insertAdjacentHTML("afterbegin",
+      '<div class="msg warn">PDF kütüphanesi yüklenemedi (internet gerekir) — rapor sayfaları PNG olarak indirildi.</div>');
+  }
+});
+
+/* yeniden yerleştir: otomatik modda bir sonraki alternatife geç */
+$("btnRe").addEventListener("click",()=>{
+  if(palletMode!=="auto"){
+    $("palletMsgs").insertAdjacentHTML("afterbegin",
+      '<div class="msg info">Yeniden yerleştirme otomatik modda çalışır.</div>');
+    return;
+  }
+  // önce aynı (en yüksek) adedi veren farklı düzenler arasında dön; yoksa listedeki sonrakine geç
+  const cur=autoCands[autoSel];
+  const sameTot=autoCands.map((c,i)=>i).filter(i=>autoCands[i].total===cur.total);
+  if(sameTot.length>1){
+    const pos=sameTot.indexOf(autoSel);
+    autoSel=sameTot[(pos+1)%sameTot.length];
+    compute();
+  }else{
+    $("palletMsgs").insertAdjacentHTML("afterbegin",
+      '<div class="msg info">Bu koli adedini (<b>'+fmt(cur.total)+'</b>) veren tek diziliş var — verimi düşürmeden farklı bir düzen bulunamadı.'+
+      (autoCands.length>1?' Daha düşük adetli seçenekleri yukarıdaki listeden tıklayarak görebilirsiniz.':'')+'</div>');
+  }
+});
+
+/* ================= TRUCK LOADING ================= */
+let lastCalc=null, truckCands=[], truckSel=0;
+window.pickTruck=function(i){truckSel=i;computeTruck();};
+
+let cLitre=0, cKind="generic";
+function computeTruck(){
+  const VL=num("vL",13620), VW=num("vW",2480), VH=num("vH",2700), cap=num("vKg",0);
+  const stackOk=$("vStack").checked;
+  const mode=$("cType").value, isCalc=(mode==="calc");
+  let PL,PW,PH,totalH,totB=0,grossKg=0,prodPerPal=0,maxTierCap=99,uLabel="palet";
+  if(isCalc){
+    if(!lastCalc)return;
+    ({PL,PW,PH,totalH,totB,grossKg,prodPerPal}=lastCalc);
+    if(totalH<=PH){$("vStats").innerHTML="";$("vMsgs").innerHTML='<div class="msg warn">Önce Hesaplayıcı sekmesinde geçerli bir palet planı oluşturun.</div>';return;}
+  }else{
+    PL=num("cL",0);PW=num("cW",0);totalH=num("cH",0);PH=Math.round(totalH*0.12);
+    grossKg=num("cKgU",0);maxTierCap=Math.max(1,num("cMaxT",1));uLabel="taşıyıcı";
+    if(PL<=0||PW<=0||totalH<=0){$("vStats").innerHTML="";$("vMsgs").innerHTML='<div class="msg warn">Taşıyıcı ölçülerini girin.</div>';return;}
+  }
+
+  const all=autoLayoutAll(VL,VW,VH,[PL,PW,totalH],false,stackOk?(isCalc?0:maxTierCap):1);
+  truckCands=all; if(truckSel>=all.length)truckSel=0;
+  const res=all[truckSel]||{rects:[],perLayer:0,nz:0,total:0,fh:totalH,areaEff:0};
+
+  let totPal=res.total, wLimited=false;
+  if(cap>0&&grossKg>0&&totPal*grossKg>cap){totPal=Math.floor(cap/grossKg);wLimited=true;}
+  const loadKg=grossKg>0?totPal*grossKg:0;
+  const maxTiers=Math.floor(VH/totalH);
+
+  $("vPalletInfo").innerHTML = isCalc ?
+    `Palet: <b>${PL} × ${PW} mm</b> &nbsp;•&nbsp; Yüklü yükseklik: <b>${fmt(totalH)} mm</b><br>`+
+    `Koli/palet: <b>${fmt(totB)}</b>${prodPerPal?` &nbsp;•&nbsp; Ürün/palet: <b>${fmt(prodPerPal)}</b>`:""}`+
+    `${grossKg>0?` &nbsp;•&nbsp; Brüt: <b>${grossKg.toFixed(1)} kg/palet</b>`:" &nbsp;•&nbsp; Brüt: — (ağırlık girilmedi)"}` :
+    `Taşıyıcı: <b>${PL} × ${PW} × ${fmt(totalH)} mm</b>`+
+    `${grossKg>0?` &nbsp;•&nbsp; Dolu ağırlık: <b>${grossKg.toFixed(0)} kg/adet</b>`:""}`+
+    `${cLitre>0?` &nbsp;•&nbsp; Kapasite: <b>${fmt(cLitre)} L/adet</b> (bulk sıvı/toz)`:""}`+
+    ` &nbsp;•&nbsp; Maks. istif: <b>${maxTierCap} kat</b>`;
+
+  $("vStats").innerHTML=
+    stat(fmt(totPal),isCalc?"Toplam palet":"Toplam taşıyıcı",true)+
+    stat(res.perLayer,"Taban adedi")+
+    stat(res.nz,"Kat sayısı")+
+    stat(`%${res.areaEff?res.areaEff.toFixed(1):"0"}`,"Taban verimi")+
+    (isCalc?stat(fmt(totPal*totB),"Toplam koli"):"")+
+    (isCalc&&prodPerPal?stat(fmt(totPal*prodPerPal),"Toplam ürün"):"")+
+    (!isCalc&&cLitre>0?stat(fmt(totPal*cLitre)+" L","Toplam hacim"):"")+
+    (loadKg>0?stat(`${fmt(Math.round(loadKg))} kg`,"Toplam yük"):"")+
+    (cap>0?stat(`${fmt(cap)} kg`,"Kapasite"):"");
+
+  const seenT={};
+  $("vOptions").innerHTML = truckCands.length>1 ?
+    '<div class="optrow">'+truckCands.map((c,i)=>{
+      const nth=(seenT[c.total]=(seenT[c.total]||0)+1);
+      return `<button class="opt${i===truckSel?" on":""}" onclick="pickTruck(${i})">`+
+      `${i+1}) ${c.perLayer} taban × ${c.nz} kat = <b>${c.total}</b> ${uLabel} `+
+      `<span class="pct">• taban %${c.areaEff.toFixed(1)}${c.adv?" • gelişmiş":(c.mixed?" • karışık":"")}${nth>1?` • ${nth}. düzen`:""}</span></button>`;
+    }).join("")+'</div>' : "";
+
+  let vm="";
+  if(stackOk&&maxTiers<2)
+    vm+=`<div class="msg warn">⚠️ Palet üstüne palet için yükseklik yetersiz: 2 × ${fmt(totalH)} = ${fmt(2*totalH)} mm &gt; ${fmt(VH)} mm — tek kat yüklenir.</div>`;
+  if(stackOk&&res.nz>=2)
+    vm+=`<div class="msg info">Palet üstüne palet: <b>${res.nz} kat</b> (${fmt(res.nz*totalH)} mm ≤ ${fmt(VH)} mm) ✓</div>`;
+  if(wLimited)
+    vm+=`<div class="msg warn">⚠️ Ağırlık limiti: ${fmt(res.total)} ${uLabel} sığıyor ama kapasite ${fmt(cap)} kg olduğu için <b>${fmt(totPal)} ${uLabel}</b> yüklenebilir — üstten görünüşte kesikli alanlar yüklenmeyen yerlerdir.</div>`;
+  $("vMsgs").innerHTML=vm;
+
+  const rectsSorted=[...res.rects].sort((a,b)=>a.x-b.x||a.y-b.y);
+  const nBottom=Math.min(totPal,res.perLayer);
+  renderTop($("vTop"),VL,VW,rectsSorted.slice(0,nBottom),
+    {contFill:"#dde3e9",contStroke:"#47525e",boxFill:"#e9cd92",boxStroke:"#8a6d3b",
+     ghost:rectsSorted.slice(nBottom)});
+
+  const vboxes=[{x:0,y:0,z:-130,dx:VL,dy:VW,dz:130,c:["#c6ccd3","#aab1b9","#8f979f"],stroke:"#6b737c"}];
+  const wood=["#e9cd92","#dab26b","#bd9754"], cart=["#f7f5f0","#edeae4","#d9d5cd"],
+        drum=["#cfdbe4","#b3c4d1","#96abbb"], cage=["#dfe4e8","#c6cdd4","#aab3bc"];
+  let drawn=0;
+  outer:
+  for(let k=0;k<res.nz;k++){
+    for(const r of rectsSorted){
+      if(drawn>=totPal)break outer;
+      if(isCalc){
+        vboxes.push({x:r.x,y:r.y,z:k*totalH,dx:r.w,dy:r.h,dz:PH,c:wood,stroke:"#8a6d3b"});
+        vboxes.push({x:r.x+15,y:r.y+15,z:k*totalH+PH,dx:r.w-30,dy:r.h-30,dz:totalH-PH,c:cart});
+      }else if(cKind==="drum"){
+        const steel=Math.min(PL,PW)<=590;
+        vboxes.push({x:r.x+5,y:r.y+5,z:k*totalH,dx:r.w-10,dy:r.h-10,dz:totalH-12,kind:"drum",
+          c:steel?["#dde5ea","#b4c4cf","#93a8b6"]:["#7fa8d0","#5d8cbd","#40729f"]});
+      }else if(cKind==="ibc"){
+        vboxes.push({x:r.x+8,y:r.y+8,z:k*totalH,dx:r.w-16,dy:r.h-16,dz:140,
+          c:["#c6ccd3","#aab1b9","#8f979f"],stroke:"#6b737c"});
+        vboxes.push({x:r.x+28,y:r.y+28,z:k*totalH+140,dx:r.w-56,dy:r.h-56,dz:totalH-165,kind:"ibc",
+          c:["#f4f6f4","#e7ebe7","#d5dbd7"],stroke:"#9aa5ad"});
+      }else if(cKind==="cage"){
+        vboxes.push({x:r.x+8,y:r.y+8,z:k*totalH,dx:r.w-16,dy:r.h-16,dz:totalH-15,kind:"cage",
+          c:["#eef1f3","#e0e5e9","#ccd3d9"],stroke:"#7d8c99"});
+      }else if(cKind==="boxwood"){
+        vboxes.push({x:r.x+8,y:r.y+8,z:k*totalH,dx:r.w-16,dy:r.h-16,dz:totalH-15,kind:"boxwood",
+          c:["#e5c98f","#d4af6b","#b9945a"],stroke:"#8a6d3b"});
+      }else{
+        vboxes.push({x:r.x+10,y:r.y+10,z:k*totalH,dx:r.w-20,dy:r.h-20,dz:totalH-15,
+                     c:cLitre>0?drum:cage,stroke:"#7d8c99"});
+      }
+      drawn++;
+    }
+  }
+  renderIso($("vIso"),vboxes,{outline:{L:VL,W:VW,H:VH}});
+
+  $("vDetail").innerHTML=
+    `Araç iç ölçü: <b>${fmt(VL)} × ${fmt(VW)} × ${fmt(VH)} mm</b> &nbsp;•&nbsp; `+
+    `Yükleme: <b>${res.perLayer} taban × ${res.nz} kat = ${fmt(totPal)} ${uLabel}</b> &nbsp;•&nbsp; `+
+    (isCalc?`Toplam koli: <b>${fmt(totPal*totB)}</b>${prodPerPal?` &nbsp;•&nbsp; Toplam ürün: <b>${fmt(totPal*prodPerPal)}</b>`:""}`
+           :(cLitre>0?`Toplam hacim: <b>${fmt(totPal*cLitre)} L</b>`:`Taşıyıcı: <b>${fmt(totPal)} adet</b>`))+
+    `${loadKg>0?` &nbsp;•&nbsp; Toplam yük: <b>${fmt(Math.round(loadKg))} kg</b> / ${fmt(cap)} kg`:""}`+
+    ` &nbsp;•&nbsp; Kalan uzunluk: <b>${fmt(Math.round(VL-(res.rects.length?Math.max(...res.rects.map(r=>r.x+r.w))-Math.min(...res.rects.map(r=>r.x)):0)))} mm</b>`;
+}
+$("cType").addEventListener("change",e=>{
+  const v=e.target.value;
+  $("cWrap").classList.toggle("hidden",v==="calc");
+  cKind = (v==="calc"||v==="custom") ? "generic" : (v.split(",")[6]||"generic");
+  if(v!=="calc"&&v!=="custom"){
+    const[l,w,h,kg,st,lt]=v.split(",").map(Number);
+    $("cL").value=l;$("cW").value=w;$("cH").value=h;$("cKgU").value=kg;$("cMaxT").value=st;
+    cLitre=lt;
+    $("cNote").textContent = lt>0
+      ? "Bulk sıvı/toz taşıyıcı. Variller kare düzende hesaplanır — bal peteği (kaydırmalı) dizilimde %5–10 daha fazla sığabilir."
+      : "Kafes/box taşıyıcılar üst üste istiflenebilir; maks. kat sayısını taşıyıcının taşıma gücüne göre ayarlayın.";
+  }else{cLitre=0;$("cNote").textContent="";}
+  computeTruck();
+});
+$("vPreset").addEventListener("change",e=>{
+  if(e.target.value!=="custom"){
+    const [l,w,h,kg]=e.target.value.split(",").map(Number);
+    $("vL").value=l;$("vW").value=w;$("vH").value=h;$("vKg").value=kg;
+  }
+  computeTruck();
+});
+["vL","vW","vH"].forEach(id=>$(id).addEventListener("input",()=>{$("vPreset").value="custom";}));
+document.querySelectorAll("#tabTruck input").forEach(i=>i.addEventListener("input",computeTruck));
+$("vStack").addEventListener("change",computeTruck);
+
+/* tabs */
+function showTab(which){
+  const m={calc:"tabCalc",sug:"tabSuggest",truck:"tabTruck"};
+  Object.entries(m).forEach(([k,id])=>$(id).classList.toggle("hidden",k!==which));
+  $("tabBtnCalc").classList.toggle("on",which==="calc");
+  $("tabBtnSug").classList.toggle("on",which==="sug");
+  $("tabBtnTruck").classList.toggle("on",which==="truck");
+  if(which==="truck")computeTruck();
+}
+$("tabBtnCalc").addEventListener("click",()=>showTab("calc"));
+$("tabBtnSug").addEventListener("click",()=>showTab("sug"));
+$("tabBtnTruck").addEventListener("click",()=>showTab("truck"));
+$("btnSuggest").addEventListener("click",suggest);
+
+/* ---- perspektif kontrolleri: döndür / zoom / kaydır / sıfırla ---- */
+function isoControls(id){
+  const cont=$(id); if(!cont)return;
+  const vb=cont.closest(".viewbox"); if(!vb)return;
+  const bar=document.createElement("div"); bar.className="isoctl";
+  bar.innerHTML='<button title="Döndür (90°)">⟳</button><button title="Yakınlaş">+</button><button title="Uzaklaş">−</button><button title="Varsayılan görünüş">⌂</button>';
+  vb.appendChild(bar);
+  const [bRot,bIn,bOut,bHome]=bar.querySelectorAll("button");
+  const st=()=>ISO_VIEW[id]||(ISO_VIEW[id]={rot:0,zoom:1,px:0,py:0});
+  const rerender=()=>{const L=ISO_LAST[id]; if(L)renderIso($(id),L.boxes,L.opt);};
+  bRot.addEventListener("click",()=>{st().rot=(st().rot+1)%4;rerender();});
+  bHome.addEventListener("click",()=>{Object.assign(st(),{rot:0,zoom:1,px:0,py:0});rerender();});
+  const zoomBy=f=>{const s=st();s.zoom=Math.min(8,Math.max(0.4,s.zoom*f));
+    const svg=cont.querySelector("svg"); if(svg)applyZoom(svg,s);};
+  bIn.addEventListener("click",()=>zoomBy(1.3));
+  bOut.addEventListener("click",()=>zoomBy(0.77));
+  cont.addEventListener("wheel",e=>{e.preventDefault();zoomBy(e.deltaY<0?1.12:0.89);},{passive:false});
+  let drag=null;
+  cont.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY};cont.style.cursor="grabbing";});
+  window.addEventListener("pointermove",e=>{
+    if(!drag)return;
+    const s=st(), svg=cont.querySelector("svg"); if(!svg||!svg.dataset.base)return;
+    const base=svg.dataset.base.split(" ").map(Number);
+    const scale=(base[2]/s.zoom)/Math.max(1,svg.clientWidth);
+    s.px-=(e.clientX-drag.x)*scale; s.py-=(e.clientY-drag.y)*scale;
+    drag={x:e.clientX,y:e.clientY}; applyZoom(svg,s);
+  });
+  window.addEventListener("pointerup",()=>{drag=null;cont.style.cursor="";});
+}
+["palletIso","prodIso","vIso"].forEach(isoControls);
+
+compute();
+</script>
+</body>
+</html>
